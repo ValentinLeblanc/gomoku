@@ -66,6 +66,9 @@ public class GomokuModelController {
 				model.setValue(j, i, GomokuModel.UNPLAYED);
 			}
 		}
+		
+		lastMove = null;
+
 		model.firePropertyChange(GomokuModel.BOARD_RESET);
 	}
 	
@@ -75,15 +78,19 @@ public class GomokuModelController {
 			
 			MoveData newMove = new MoveData(lastMove);
 			newMove.setValue(GomokuModel.UNPLAYED);
-			lastMove = lastMove.getPreviousMove();
-			model.firePropertyChange(GomokuModel.MOVE_UPDATE, newMove);
+			if (lastMove.getPreviousMove() != null) {
+				lastMove = lastMove.getPreviousMove();
+				model.firePropertyChange(GomokuModel.MOVE_UPDATE, newMove);
+			}
 		}
 	}
 	 
 	private void handleRedoRequest() {
 		if (lastMove != null && lastMove.getNextMove() != null) {
    			model.setValue(lastMove.getNextMove().getColumnIndex(), lastMove.getNextMove().getRowIndex(), lastMove.getNextMove().getValue());
-			model.firePropertyChange(GomokuModel.MOVE_UPDATE, lastMove.getNextMove());
+			lastMove = lastMove.getNextMove();
+
+   			model.firePropertyChange(GomokuModel.MOVE_UPDATE, lastMove);
 		}
 	}
 
