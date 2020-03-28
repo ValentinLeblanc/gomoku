@@ -3,11 +3,15 @@ package model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import engine.GomokuEngine;
+
 public class GomokuModelController {
 
 	private GomokuModel model;
 	private PropertyChangeListener modelListener;
 	private MoveData lastMove;
+	
+	private GomokuEngine engine = new GomokuEngine();
 
 	public GomokuModelController(GomokuModel model) {
 		this.model = model;
@@ -29,6 +33,8 @@ public class GomokuModelController {
 						handleUndoRequest();
 					} else if (evt.getPropertyName().equals(GomokuModel.REDO_REQUEST)) {
 						handleRedoRequest();
+					} else if (evt.getPropertyName().equals(GomokuModel.VALUE)) {
+						computeEvaluation();
 					}
 				}
 			};
@@ -69,19 +75,17 @@ public class GomokuModelController {
 		
 		lastMove = null;
 
-		model.firePropertyChange(GomokuModel.BOARD_RESET);
+		model.firePropertyChange(GomokuModel.RESET_UPDATE);
 	}
 	
 	private void handleUndoRequest() {
-		if (lastMove != null) {
+		if (lastMove != null && lastMove.getPreviousMove() != null) {
 			model.setValue(lastMove.getColumnIndex(), lastMove.getRowIndex(), GomokuModel.UNPLAYED);
 			
 			MoveData newMove = new MoveData(lastMove);
 			newMove.setValue(GomokuModel.UNPLAYED);
-			if (lastMove.getPreviousMove() != null) {
-				lastMove = lastMove.getPreviousMove();
-				model.firePropertyChange(GomokuModel.MOVE_UPDATE, newMove);
-			}
+			lastMove = lastMove.getPreviousMove();
+			model.firePropertyChange(GomokuModel.MOVE_UPDATE, newMove);
 		}
 	}
 	 
@@ -162,4 +166,12 @@ public class GomokuModelController {
 		
 		return null;
 	}
+	
+	private void computeEvaluation() {
+		getModel().setBlackEvaluation(engine.computeEvaluation(GomokuModel.BLACK, getModel().getData()));
+		getModel().firePropertyChange(GomokuModel.BLACK_EVALUATION_UPDATE);
+		getModel().setWhiteEvaluation(engine.computeEvaluation(GomokuModel.WHITE, getModel().getData()));
+		getModel().firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
+	}
+
 }

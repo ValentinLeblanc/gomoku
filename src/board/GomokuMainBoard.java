@@ -1,12 +1,18 @@
 package board;
 
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import model.GomokuModel;
 
 public class GomokuMainBoard extends JFrame {
 
@@ -27,7 +33,12 @@ public class GomokuMainBoard extends JFrame {
 	private JButton undoButton;
 	private JButton redoButton;
 	
-	private GomokuBoardController controller;
+	private JLabel blackEvaluationLabel;
+	private JLabel whiteEvaluationLabel;
+	
+	private GomokuMainBoardController controller;
+	
+	private GomokuModel model;
 
 	public GomokuMainBoard() {
 		this(DEFAULT_ROW_COUNT, DEFAULT_COLUMN_COUNT);
@@ -35,7 +46,8 @@ public class GomokuMainBoard extends JFrame {
 
 	public GomokuMainBoard(int rowCount, int columnCount) {
 		super("Gomoku");
-		this.controller = new GomokuBoardController(this);
+		model = new GomokuModel(columnCount, rowCount);
+		this.controller = new GomokuMainBoardController(this);
 		this.rowCount = rowCount;
 		this.columnCount = columnCount;
 		initialize(rowCount, columnCount);
@@ -45,16 +57,21 @@ public class GomokuMainBoard extends JFrame {
 		setLayout(new GridLayout());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		
 		add(getGomokuCellsPanel());
 		add(getAnalysisPanel());
 		setResizable(false);
 		pack();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 	}
+	
+	public GomokuModel getModel() {
+		return model;
+	}
 
 	public GomokuCellsPanel getGomokuCellsPanel() {
 		if (gomokuCellsPanel == null) {
-			gomokuCellsPanel = new GomokuCellsPanel(rowCount, columnCount);
+			gomokuCellsPanel = new GomokuCellsPanel(model);
 		}
 		return gomokuCellsPanel;
 	}
@@ -62,13 +79,50 @@ public class GomokuMainBoard extends JFrame {
 	public JPanel getAnalysisPanel() {
 		if (analysisPanel == null) {
 			analysisPanel = new JPanel();
-			analysisPanel.add(getResetButton());
-			analysisPanel.add(getUndoButton());
-			analysisPanel.add(getRedoButton());
+			analysisPanel.setLayout(new GridBagLayout());
+			
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.gridx = 0;
+			constraints.gridy = 0;
+			
+			analysisPanel.add(new JLabel("Black evaluation : "), constraints);
+			constraints.gridx++;
+			analysisPanel.add(getBlackEvaluationLabel(), constraints);
+			
+			constraints.gridx = 0;
+			constraints.gridy++;
+			analysisPanel.add(new JLabel("White evaluation : "), constraints);
+			constraints.gridx++;
+			analysisPanel.add(getWhiteEvaluationLabel(), constraints);
+			
+			constraints.gridwidth = 2;
+			constraints.gridx = 0;
+			constraints.gridy++;
+			
+			JPanel buttonsPanel = new JPanel();
+			buttonsPanel.add(getResetButton());
+			buttonsPanel.add(getUndoButton());
+			buttonsPanel.add(getRedoButton());
+			
+			analysisPanel.add(buttonsPanel, constraints);
 		}
 		return analysisPanel;
 	}
 	
+	public JLabel getBlackEvaluationLabel() {
+		if (blackEvaluationLabel == null) {
+			blackEvaluationLabel = new JLabel();
+		}
+		return blackEvaluationLabel;
+	}
+	
+	public JLabel getWhiteEvaluationLabel() {
+		if (whiteEvaluationLabel == null) {
+			whiteEvaluationLabel = new JLabel();
+		}
+		return whiteEvaluationLabel;
+	}
+
 	public JButton getResetButton() {
 		if (resetButton == null) {
 			resetButton = new JButton("Reset");

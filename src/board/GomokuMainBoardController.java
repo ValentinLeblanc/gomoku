@@ -2,17 +2,43 @@ package board;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
-public class GomokuBoardController {
+import model.GomokuModel;
+
+public class GomokuMainBoardController {
 
 	private GomokuMainBoard gomokuBoard;
 	private ActionListener actionListener;
+	private PropertyChangeListener propertyChangeListener;
 	
-	public GomokuBoardController(GomokuMainBoard gomokuBoard) {
+	public GomokuMainBoardController(GomokuMainBoard gomokuBoard) {
 		this.gomokuBoard = gomokuBoard;
 		gomokuBoard.getResetButton().addActionListener(getActionListener());
 		gomokuBoard.getUndoButton().addActionListener(getActionListener());
 		gomokuBoard.getRedoButton().addActionListener(getActionListener());
+		
+		gomokuBoard.getModel().addPropertyChangeListener(getPropetyChangeListener());
+	}
+	
+	public PropertyChangeListener getPropetyChangeListener() {
+		if (propertyChangeListener == null) {
+			propertyChangeListener = new PropertyChangeListener() {
+				
+				@Override
+				public void propertyChange(PropertyChangeEvent evt) {
+					if (evt.getPropertyName().equals(GomokuModel.BLACK_EVALUATION_UPDATE)) {
+						gomokuBoard.getBlackEvaluationLabel().setText("" + gomokuBoard.getModel().getBlackEvaluation());
+					} else if (evt.getPropertyName().equals(GomokuModel.WHITE_EVALUATION_UPDATE)) {
+						gomokuBoard.getWhiteEvaluationLabel().setText("" + gomokuBoard.getModel().getWhiteEvaluation());
+					}
+				}
+			};
+		}
+		
+		
+		return propertyChangeListener;
 	}
 	
 	public ActionListener getActionListener() {

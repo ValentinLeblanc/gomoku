@@ -17,16 +17,25 @@ public class GomokuModel extends Component {
 	public static final int BLACK = 1;
 	public static final int WHITE = -1;
 	
-	public static final String MOVE_REQUEST = "moveRequest";
 	public static final String MOVE_UPDATE = "moveUpdate";
 	public static final String WIN_UPDATE = "winUpdate";
+	public static final String RESET_UPDATE = "resetUpdate";
+	
+	public static final String MOVE_REQUEST = "moveRequest";
 	public static final String RESET_REQUEST = "resetRequest";
 	public static final String UNDO_REQUEST = "undoRequest";
 	public static final String REDO_REQUEST = "redoRequest";
-	public static final String BOARD_RESET = "boardReset";
+	
+	public static final String VALUE = "value";
+	
+	public static final String BLACK_EVALUATION_UPDATE = "blackEvaluationUpdate";
+	public static final String WHITE_EVALUATION_UPDATE = "whiteEvaluationUpdate";
 	
 	private int columnCount;
 	private int rowCount;
+	
+	private double blackEvaluation;
+	private double whiteEvaluation;
 	
 	public GomokuModel(int columnCount, int rowCount) {
 		setModelController(new GomokuModelController(this));
@@ -47,12 +56,17 @@ public class GomokuModel extends Component {
 		}
 	}
 	
+	public int[][] getData() {
+		return data;
+	}
+	
 	public int getValue(int columnIndex, int rowIndex) {
 		return data[columnIndex][rowIndex];
 	}
 	
 	public void setValue(int columnIndex, int rowIndex, int value) {
 		data[columnIndex][rowIndex] = value;
+		firePropertyChange(VALUE);
 	}
 
 	public GomokuModelController getModelController() {
@@ -93,6 +107,22 @@ public class GomokuModel extends Component {
 
 	public void setRowCount(int rowCount) {
 		this.rowCount = rowCount;
+	}
+
+	public double getBlackEvaluation() {
+		return blackEvaluation;
+	}
+
+	public void setBlackEvaluation(double evaluation) {
+		this.blackEvaluation = evaluation;
+	}
+	
+	public double getWhiteEvaluation() {
+		return whiteEvaluation;
+	}
+	
+	public void setWhiteEvaluation(double evaluation) {
+		this.whiteEvaluation = evaluation;
 	}
 
 }

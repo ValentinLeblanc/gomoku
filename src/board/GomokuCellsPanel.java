@@ -10,6 +10,8 @@ import java.awt.geom.Line2D;
 
 import javax.swing.JPanel;
 
+import model.GomokuModel;
+
 public class GomokuCellsPanel extends JPanel {
 
 	/**
@@ -25,10 +27,10 @@ public class GomokuCellsPanel extends JPanel {
 	private int columnCount;
 	private int rowCount;
 	
-	public GomokuCellsPanel(int rowCount, int columnCount) {
-		this.rowCount = rowCount;
-		this.columnCount = columnCount;
-		this.controller = new GomokuCellsPanelController(this);
+	public GomokuCellsPanel(GomokuModel model) {
+		this.rowCount = model.getRowCount();
+		this.columnCount = model.getColumnCount();
+		this.controller = new GomokuCellsPanelController(this, model);
 		setLayout(new GridLayout(rowCount, columnCount));
 		setSize(new Dimension(columnCount * (CELL_WIDTH + 2), rowCount * (CELL_HEIGHT + 3)));
 

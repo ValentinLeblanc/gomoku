@@ -22,9 +22,9 @@ public class GomokuCellsPanelController {
 
 	private int currentPlayingColor = GomokuModel.BLACK;
 
-	public GomokuCellsPanelController(GomokuCellsPanel panel) {
+	public GomokuCellsPanelController(GomokuCellsPanel panel, GomokuModel model) {
 		this.panel = panel;
-		gomokuModel = new GomokuModel(panel.getColumnCount(), panel.getRowCount());
+		gomokuModel = model;
 		gomokuModel.addPropertyChangeListener(getModelListener());
 	}
 	
@@ -47,21 +47,22 @@ public class GomokuCellsPanelController {
 	private PropertyChangeListener getModelListener() {
 		if (modelListener == null) {
 			modelListener = new PropertyChangeListener() {
-				
+
 				@Override
 				public void propertyChange(PropertyChangeEvent evt) {
+
 					if (evt.getPropertyName().equals(GomokuModel.MOVE_UPDATE)) {
 						MoveData moveData = (MoveData) evt.getNewValue();
 						handleMoveUpdate(moveData);
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {
 						GomokuCellsPanelController.this.winData = (int[][]) evt.getNewValue();
 						handleWinUpdate();
-					} else if (evt.getPropertyName().equals(GomokuModel.BOARD_RESET)) {
-						handleBoardReset();
+					} else if (evt.getPropertyName().equals(GomokuModel.RESET_UPDATE)) {
+						handleResetUpdate();
 					}
 				}
-
 			};
+
 		}
 		return modelListener;
 	}
@@ -92,9 +93,9 @@ public class GomokuCellsPanelController {
 		panel.repaint();
 	}
 	
-	private void handleBoardReset() {
+	private void handleResetUpdate() {
 		
-		GomokuCellsPanelController.this.winData = null;
+		winData = null;
 		currentPlayingColor = GomokuModel.BLACK;
 
 		for (Component c : panel.getComponents()) {
