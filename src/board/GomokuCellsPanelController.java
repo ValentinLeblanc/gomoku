@@ -22,6 +22,9 @@ public class GomokuCellsPanelController {
 
 	private int currentPlayingColor = GomokuModel.BLACK;
 
+	private boolean computer;
+	private boolean computerTurn = false;
+	
 	public GomokuCellsPanelController(GomokuCellsPanel panel, GomokuModel model) {
 		this.panel = panel;
 		gomokuModel = model;
@@ -51,9 +54,15 @@ public class GomokuCellsPanelController {
 				@Override
 				public void propertyChange(PropertyChangeEvent evt) {
 
-					if (evt.getPropertyName().equals(GomokuModel.MOVE_UPDATE)) {
+					if (evt.getPropertyName().equals(GomokuModel.VALUE_UPDATE)) {
 						MoveData moveData = (MoveData) evt.getNewValue();
 						handleMoveUpdate(moveData);
+						if (computer) {
+							computerTurn = !computerTurn;
+							if (computerTurn) {
+								gomokuModel.firePropertyChange(GomokuModel.ENGINE_MOVE_REQUEST, currentPlayingColor);
+							}
+						}
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {
 						GomokuCellsPanelController.this.winData = (int[][]) evt.getNewValue();
 						handleWinUpdate();
@@ -75,14 +84,14 @@ public class GomokuCellsPanelController {
 		GomokuCell gomokuCell = (GomokuCell) panel.getComponent(moveData.getRowIndex() * panel.getColumnCount() + moveData.getColumnIndex());
 		
 		switch (moveData.getValue()) {
-		case 0:
+		case GomokuModel.UNPLAYED:
 			paintGomokuCell(gomokuCell, null);
 			break;
-		case -1:
-			paintGomokuCell(gomokuCell, Color.WHITE);
+		case GomokuModel.WHITE:
+			paintGomokuCell(gomokuCell, GomokuCellsPanel.WHITE_COLOR);
 			break;
-		case 1:
-			paintGomokuCell(gomokuCell, Color.BLACK);
+		case GomokuModel.BLACK:
+			paintGomokuCell(gomokuCell, GomokuCellsPanel.BLACK_COLOR);
 			break;
 		}
 		
@@ -127,4 +136,17 @@ public class GomokuCellsPanelController {
 	public int[][] getWinData() {
 		return winData;
 	}
+	
+	public void setComputer(boolean computer) {
+		this.computer= computer; 
+	}
+	
+	public boolean getComputer() {
+		return computer; 
+	}
+	
+	public void setComputerTurn(boolean computerTurn) {
+		this.computerTurn= computerTurn; 
+	}
+	
 }

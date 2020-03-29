@@ -22,6 +22,9 @@ public class GomokuCellsPanel extends JPanel {
 	public static final int CELL_WIDTH = 50;
 	public static final int CELL_HEIGHT = 50;
 
+	public static final Color BLACK_COLOR = Color.BLACK;
+	public static final Color WHITE_COLOR = Color.WHITE;
+
 	private GomokuCellsPanelController controller;
 	
 	private int columnCount;

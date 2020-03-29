@@ -19,6 +19,8 @@ public class GomokuCell extends JPanel {
 	private int columnIndex;
 	private int rowIndex;
 	
+	private static final Color CELL_COLOR = Color.orange.darker();
+	
 	private Color circleColor;
 	
 	public static final int CELL_WIDTH = 50;
@@ -34,7 +36,7 @@ public class GomokuCell extends JPanel {
 
 	private void initialize() {
 		setPreferredSize(new Dimension(CELL_WIDTH, CELL_HEIGHT));
-		setBackground(Color.orange);
+		setBackground(CELL_COLOR);
 	}
 
 	public int getRowIndex() {

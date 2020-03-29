@@ -51,6 +51,7 @@ public class GomokuMenu extends JFrame {
 	public JButton getComputerButton() {
 		if (computerButton == null) {
 			computerButton = new JButton("Human vs computer");
+			computerButton.addActionListener(actionListener);
 		}
 		return computerButton;
 	}
@@ -61,10 +62,11 @@ public class GomokuMenu extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == getHumanButton()) {
 				setVisible(false);
-				GomokuMainBoard newBoard = new GomokuMainBoard();
+				GomokuMainBoard newBoard = new GomokuMainBoard(false);
 				newBoard.setVisible(true);
 			} else if (e.getSource() == getComputerButton()) {
-
+				GomokuMainBoard newBoard = new GomokuMainBoard(true);
+				newBoard.setVisible(true);
 			}
 		}
 	};

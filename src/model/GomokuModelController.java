@@ -11,11 +11,14 @@ public class GomokuModelController {
 	private PropertyChangeListener modelListener;
 	private MoveData lastMove;
 	
-	private GomokuEngine engine = new GomokuEngine();
+	private GomokuEngine engine;
+	
+	private Thread engineThread;
 
 	public GomokuModelController(GomokuModel model) {
 		this.model = model;
 		model.addPropertyChangeListener(getModelListener());
+		engine = new GomokuEngine(model.getData());
 	}
 
 	private PropertyChangeListener getModelListener() {
@@ -33,8 +36,38 @@ public class GomokuModelController {
 						handleUndoRequest();
 					} else if (evt.getPropertyName().equals(GomokuModel.REDO_REQUEST)) {
 						handleRedoRequest();
-					} else if (evt.getPropertyName().equals(GomokuModel.VALUE)) {
-						computeEvaluation();
+					} else if (evt.getPropertyName().equals(GomokuModel.VALUE_UPDATE)) {
+						updateEvaluation();
+						MoveData moveData = (MoveData) evt.getNewValue();
+						if (moveData.getValue() != GomokuModel.UNPLAYED) {
+							int[][] winResult = engine.checkForWin(model.getData(), moveData.getValue());
+							if (winResult != null) {
+								model.firePropertyChange(GomokuModel.WIN_UPDATE, winResult);
+							}
+						} else {
+							int[][] winResult = engine.checkForWin(model.getData(), GomokuModel.BLACK);
+							if (winResult != null) {
+								model.firePropertyChange(GomokuModel.WIN_UPDATE, winResult);
+							} else {
+								winResult = engine.checkForWin(model.getData(), GomokuModel.WHITE);
+								if (winResult != null) {
+									model.firePropertyChange(GomokuModel.WIN_UPDATE, winResult);
+								} else {
+									model.firePropertyChange(GomokuModel.WIN_UPDATE, null);
+								}
+							}
+						}
+					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_MOVE_REQUEST)) {
+						int playingColor = (int) evt.getNewValue();
+						
+						engineThread = new Thread() {
+							public void run() {
+								int[] engineMove = engine.computeMove(playingColor);
+								model.setValue(engineMove[0], engineMove[1], playingColor);
+							}
+						};
+						engineThread.start();
+						
 					}
 				}
 			};
@@ -49,7 +82,6 @@ public class GomokuModelController {
 	private void handleMoveRequest(MoveData moveData) {
 		if (model.getValue(moveData.getColumnIndex(), moveData.getRowIndex()) == GomokuModel.UNPLAYED) {
 			model.setValue(moveData.getColumnIndex(), moveData.getRowIndex(), moveData.getValue());
-			model.firePropertyChange(GomokuModel.MOVE_UPDATE, moveData);
 			
 			moveData.setPreviousMove(lastMove);
 			
@@ -58,34 +90,30 @@ public class GomokuModelController {
 			}
 			
 			lastMove = moveData;
-			
-			int[][] winResult = checkForWin(moveData.getValue());
-			if (winResult != null) {
-				model.firePropertyChange(GomokuModel.WIN_UPDATE, winResult);
-			}
 		}
 	}
 	
 	private void handleResetRequest() {
 		for (int i = 0; i < model.getRowCount(); i++) {
 			for (int j = 0; j < model.getColumnCount(); j++) {
-				model.setValue(j, i, GomokuModel.UNPLAYED);
+				model.getData()[j][i] = GomokuModel.UNPLAYED;
 			}
 		}
 		
 		lastMove = null;
-
+		
+		getModel().setBlackEvaluation(0);
+		model.firePropertyChange(GomokuModel.BLACK_EVALUATION_UPDATE);
+		getModel().setWhiteEvaluation(0);
+		model.firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
+		
 		model.firePropertyChange(GomokuModel.RESET_UPDATE);
 	}
-	
+
 	private void handleUndoRequest() {
 		if (lastMove != null && lastMove.getPreviousMove() != null) {
 			model.setValue(lastMove.getColumnIndex(), lastMove.getRowIndex(), GomokuModel.UNPLAYED);
-			
-			MoveData newMove = new MoveData(lastMove);
-			newMove.setValue(GomokuModel.UNPLAYED);
 			lastMove = lastMove.getPreviousMove();
-			model.firePropertyChange(GomokuModel.MOVE_UPDATE, newMove);
 		}
 	}
 	 
@@ -93,84 +121,13 @@ public class GomokuModelController {
 		if (lastMove != null && lastMove.getNextMove() != null) {
    			model.setValue(lastMove.getNextMove().getColumnIndex(), lastMove.getNextMove().getRowIndex(), lastMove.getNextMove().getValue());
 			lastMove = lastMove.getNextMove();
-
-   			model.firePropertyChange(GomokuModel.MOVE_UPDATE, lastMove);
 		}
 	}
 
-	private int[][] checkForWin(int color) {
-		
-		int[][] result = new int [2][2];
-		int linedUpCount = 1;
-		for (int i = 0; i < model.getRowCount(); i++) {
-			for (int j = 0; j < model.getColumnCount(); j++) {
-				if (model.getValue(j, i) == color) {
-					// check south
-					int k = 1;
-					result[0][0] = j;
-					result[0][1] = i;
-					while (i + k < model.getRowCount() && model.getValue(j, i + k) == color) {
-						linedUpCount++;
-						if (linedUpCount == 5) {
-							result[1][0] = j;
-							result[1][1] = i + k;
-							return result;
-						}
-						k++;
-					}
-					// check east
-					k = 1;
-					linedUpCount = 1;
-					result[0][0] = j;
-					result[0][1] = i;
-					while (j + k < model.getColumnCount() && model.getValue(j + k, i) == color) {
-						linedUpCount++;
-						if (linedUpCount == 5) {
-							result[1][0] = j + k;
-							result[1][1] = i;
-							return result;
-						}
-						k++;
-					}
-					// check southeast
-					k = 1;
-					linedUpCount = 1;
-					result[0][0] = j;
-					result[0][1] = i;
-					while (j + k < model.getColumnCount() && i + k < model.getRowCount() && model.getValue(j + k, i + k) == color) {
-						linedUpCount++;
-						if (linedUpCount == 5) {
-							result[1][0] = j + k;
-							result[1][1] = i + k;
-							return result;
-						}
-						k++;
-					}
-					// check southwest
-					k = 1;
-					linedUpCount = 1;
-					result[0][0] = j;
-					result[0][1] = i;
-					while (j - k > -1 && i + k < model.getRowCount() && model.getValue(j - k, i + k) == color) {
-						linedUpCount++;
-						if (linedUpCount == 5) {
-							result[1][0] = j - k;
-							result[1][1] = i + k;
-							return result;
-						}
-						k++;
-					}
-				}
-			}
-		}
-		
-		return null;
-	}
-	
-	private void computeEvaluation() {
-		getModel().setBlackEvaluation(engine.computeEvaluation(GomokuModel.BLACK, getModel().getData()));
+	private void updateEvaluation() {
+		getModel().setBlackEvaluation(engine.computeEvaluation(GomokuModel.BLACK));
 		getModel().firePropertyChange(GomokuModel.BLACK_EVALUATION_UPDATE);
-		getModel().setWhiteEvaluation(engine.computeEvaluation(GomokuModel.WHITE, getModel().getData()));
+		getModel().setWhiteEvaluation(engine.computeEvaluation(GomokuModel.WHITE));
 		getModel().firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
 	}
 

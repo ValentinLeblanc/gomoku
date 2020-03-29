@@ -10,7 +10,9 @@ import java.awt.Toolkit;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.UIManager;
 
 import model.GomokuModel;
 
@@ -33,33 +35,52 @@ public class GomokuMainBoard extends JFrame {
 	private JButton undoButton;
 	private JButton redoButton;
 	
+	private JLabel globalEvaluationLabel;
 	private JLabel blackEvaluationLabel;
 	private JLabel whiteEvaluationLabel;
 	
 	private GomokuMainBoardController controller;
 	
 	private GomokuModel model;
-
-	public GomokuMainBoard() {
-		this(DEFAULT_ROW_COUNT, DEFAULT_COLUMN_COUNT);
+	
+	public GomokuMainBoard(boolean computer) {
+		this(DEFAULT_ROW_COUNT, DEFAULT_COLUMN_COUNT, computer);
 	}
 
-	public GomokuMainBoard(int rowCount, int columnCount) {
+	public GomokuMainBoard(int rowCount, int columnCount, boolean computer) {
 		super("Gomoku");
 		model = new GomokuModel(columnCount, rowCount);
+		
+		boolean computerTurn = false;
+		
+		if (computer) {
+			int answer = JOptionPane.showConfirmDialog(null, "Play as black ? ", UIManager.getString("OptionPane.titleText"), JOptionPane.YES_NO_OPTION);
+			
+			if (answer == JOptionPane.NO_OPTION) {
+				computerTurn = true;
+			}
+		}
+		
 		this.controller = new GomokuMainBoardController(this);
 		this.rowCount = rowCount;
 		this.columnCount = columnCount;
-		initialize(rowCount, columnCount);
+		initialize(rowCount, columnCount, computer, computerTurn);
 	}
 
-	private void initialize(int rowCount, int columnCount) {
-		setLayout(new GridLayout());
+	private void initialize(int rowCount, int columnCount, boolean computer, boolean computerTurn) {
+		setLayout(new GridBagLayout());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		
-		add(getGomokuCellsPanel());
-		add(getAnalysisPanel());
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = 0;
+		add(getGomokuCellsPanel(), constraints);
+		getGomokuCellsPanel().getController().setComputer(computer);
+		getGomokuCellsPanel().getController().setComputerTurn(computerTurn);
+		
+		constraints.gridy++;
+		add(getAnalysisPanel(), constraints);
 		setResizable(false);
 		pack();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
@@ -84,7 +105,20 @@ public class GomokuMainBoard extends JFrame {
 			GridBagConstraints constraints = new GridBagConstraints();
 			constraints.gridx = 0;
 			constraints.gridy = 0;
+			constraints.gridwidth = 2;
 			
+			JPanel buttonsPanel = new JPanel();
+			buttonsPanel.add(getResetButton());
+			buttonsPanel.add(getUndoButton());
+			buttonsPanel.add(getRedoButton());
+			
+			constraints.gridwidth = 1;
+			analysisPanel.add(new JLabel("Global evaluation : "), constraints);
+			constraints.gridx++;
+			analysisPanel.add(getGlobalEvaluationLabel(), constraints);
+			
+			constraints.gridx = 0;
+			constraints.gridy++;
 			analysisPanel.add(new JLabel("Black evaluation : "), constraints);
 			constraints.gridx++;
 			analysisPanel.add(getBlackEvaluationLabel(), constraints);
@@ -95,18 +129,18 @@ public class GomokuMainBoard extends JFrame {
 			constraints.gridx++;
 			analysisPanel.add(getWhiteEvaluationLabel(), constraints);
 			
-			constraints.gridwidth = 2;
 			constraints.gridx = 0;
 			constraints.gridy++;
-			
-			JPanel buttonsPanel = new JPanel();
-			buttonsPanel.add(getResetButton());
-			buttonsPanel.add(getUndoButton());
-			buttonsPanel.add(getRedoButton());
-			
 			analysisPanel.add(buttonsPanel, constraints);
 		}
 		return analysisPanel;
+	}
+	
+	public JLabel getGlobalEvaluationLabel() {
+		if (globalEvaluationLabel == null) {
+			globalEvaluationLabel = new JLabel();
+		}
+		return globalEvaluationLabel;
 	}
 	
 	public JLabel getBlackEvaluationLabel() {
