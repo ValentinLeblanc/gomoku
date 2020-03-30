@@ -121,18 +121,6 @@ public class GomokuCellsPanelController {
 		panel.repaint();
 	}
 	
-	public void requestReset() {
-		gomokuModel.firePropertyChange(GomokuModel.RESET_REQUEST);
-	}
-	
-	public void requestUndo() {
-		gomokuModel.firePropertyChange(GomokuModel.UNDO_REQUEST);
-	}
-	
-	public void requestRedo() {
-		gomokuModel.firePropertyChange(GomokuModel.REDO_REQUEST);
-	}
-	
 	public void requestEngineMove() {
 		gomokuModel.firePropertyChange(GomokuModel.ENGINE_MOVE_REQUEST, currentPlayingColor);
 	}

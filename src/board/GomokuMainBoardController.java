@@ -65,11 +65,11 @@ public class GomokuMainBoardController {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					if (e.getSource() == gomokuBoard.getResetButton()) {
-						gomokuBoard.getGomokuCellsPanel().getController().requestReset();
+						gomokuBoard.getModel().firePropertyChange(GomokuModel.RESET_REQUEST);
 					} else  if (e.getSource() == gomokuBoard.getUndoButton()) {
-						gomokuBoard.getGomokuCellsPanel().getController().requestUndo();
+						gomokuBoard.getModel().firePropertyChange(GomokuModel.UNDO_REQUEST);
 					} else  if (e.getSource() == gomokuBoard.getRedoButton()) {
-						gomokuBoard.getGomokuCellsPanel().getController().requestRedo();
+						gomokuBoard.getModel().firePropertyChange(GomokuModel.REDO_REQUEST);
 					} else  if (e.getSource() == gomokuBoard.getComputeMoveButton()) {
 						gomokuBoard.getGomokuCellsPanel().getController().requestEngineMove();
 					}

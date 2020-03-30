@@ -58,18 +58,7 @@ public class GomokuModelController {
 							}
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_MOVE_REQUEST)) {
-						int playingColor = (int) evt.getNewValue();
-						
-						engineThread = new Thread() {
-							public void run() {
-								int[] engineMove = engine.computeMove(playingColor);
-								
-								MoveData newMove = new MoveData(engineMove[0], engineMove[1], playingColor);
-								handleMoveRequest(newMove);
-							}
-						};
-						engineThread.start();
-						
+						handleEngineMoveRequest((int) evt.getNewValue());
 					}
 				}
 			};
@@ -124,6 +113,18 @@ public class GomokuModelController {
    			model.setValue(lastMove.getNextMove().getColumnIndex(), lastMove.getNextMove().getRowIndex(), lastMove.getNextMove().getValue());
 			lastMove = lastMove.getNextMove();
 		}
+	}
+	
+	private void handleEngineMoveRequest(int playingColor) {
+		engineThread = new Thread() {
+			public void run() {
+				int[] engineMove = engine.computeMove(playingColor);
+				
+				MoveData newMove = new MoveData(engineMove[0], engineMove[1], playingColor);
+				handleMoveRequest(newMove);
+			}
+		};
+		engineThread.start();
 	}
 
 	private void updateEvaluation() {

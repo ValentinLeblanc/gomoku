@@ -15,6 +15,8 @@ public class GomokuEngine {
 	public static final int DIAGONAL1 = 2;
 	public static final int DIAGONAL2 = 3;
 	
+	private static final double OPPONENT_EVALUATION_FACTOR = 1.5;
+	
 	public GomokuEngine(int[][] data) {
 		this.data = data;
 	}
@@ -312,6 +314,8 @@ public class GomokuEngine {
 	public int[] computeMove(int playingColor) {
 		
 		int[] engineMove = new int[2];
+		int[] opponentBestMove = new int[2];
+		
 		int[][] dataCopy = new int[data.length][data[0].length];
 		
 		for (int i = 0; i < data[0].length; i++) {
@@ -324,6 +328,12 @@ public class GomokuEngine {
 		
 		double maxEvaluation = Double.NEGATIVE_INFINITY;
 
+		int[] obviousMove = checkObviousMoves(dataCopy, playingColor);
+		
+		if (obviousMove != null) {
+			return obviousMove;
+		}
+		
 		for (int i = 0; i < dataCopy[0].length; i++) {
 			for (int j = 0; j < dataCopy.length; j++) {
 				if (dataCopy[j][i] == GomokuModel.UNPLAYED) {
@@ -331,7 +341,6 @@ public class GomokuEngine {
 					dataCopy[j][i] = playingColor;
 					
 					// find opponent best move
- 					int[] opponentBestMove = new int[2];
 					double minEvaluation = Double.POSITIVE_INFINITY;
 					
 					for (int k = 0; k < dataCopy[0].length; k++) {
@@ -339,7 +348,8 @@ public class GomokuEngine {
 							if (dataCopy[l][k] == GomokuModel.UNPLAYED) {
 								
 								dataCopy[l][k] = -playingColor;
-								double newEvaluation =  engineCopy.computeEvaluation(playingColor) - 2 * engineCopy.computeEvaluation(-playingColor);
+								
+								double newEvaluation =  engineCopy.computeEvaluation(playingColor) - OPPONENT_EVALUATION_FACTOR * engineCopy.computeEvaluation(-playingColor);
 								if (newEvaluation < minEvaluation) {
 									minEvaluation = newEvaluation;
 									opponentBestMove[0] = l;
@@ -352,7 +362,7 @@ public class GomokuEngine {
 					
 					dataCopy[opponentBestMove[0]][opponentBestMove[1]] = -playingColor;
 					
-					double newEvaluation =  engineCopy.computeEvaluation(playingColor) - 2 * engineCopy.computeEvaluation(-playingColor);
+					double newEvaluation =  engineCopy.computeEvaluation(playingColor) - OPPONENT_EVALUATION_FACTOR * engineCopy.computeEvaluation(-playingColor);
 					if (newEvaluation > maxEvaluation) {
 						maxEvaluation = newEvaluation;
 						engineMove[0] = j;
@@ -367,6 +377,47 @@ public class GomokuEngine {
 		}
 
 		return engineMove;
+	}
+
+	private int[] checkObviousMoves(int[][] dataCopy, int playingColor) {
+		
+		int[] obviousMove = new int[2];
+		
+		// check winning move
+		for (int i = 0; i < dataCopy[0].length; i++) {
+			for (int j = 0; j < dataCopy.length; j++) {
+				if (dataCopy[j][i] == GomokuModel.UNPLAYED) {
+					dataCopy[j][i] = playingColor;
+					// check for win
+					int[][] winData = checkForWin(dataCopy, playingColor);
+					if (winData != null) {
+						obviousMove[0] = j;
+						obviousMove[1] = i;
+						return obviousMove;
+					}
+					dataCopy[j][i] = GomokuModel.UNPLAYED;
+				}
+			}
+		}
+		
+		// check opponent winning move
+		for (int i = 0; i < dataCopy[0].length; i++) {
+			for (int j = 0; j < dataCopy.length; j++) {
+				if (dataCopy[j][i] == GomokuModel.UNPLAYED) {
+					dataCopy[j][i] = -playingColor;
+					// check for win
+					int[][] winData = checkForWin(dataCopy, -playingColor);
+					if (winData != null) {
+						obviousMove[0] = j;
+						obviousMove[1] = i;
+						return obviousMove;
+					}
+					dataCopy[j][i] = GomokuModel.UNPLAYED;
+				}
+			}
+		}
+					
+		return null;
 	}
 	
 }

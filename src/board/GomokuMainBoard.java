@@ -68,6 +68,8 @@ public class GomokuMainBoard extends JFrame {
 		this.rowCount = rowCount;
 		this.columnCount = columnCount;
 		initialize(rowCount, columnCount, rule, computerTurn);
+		
+		getGomokuCellsPanel().getController().startNewGame();
 	}
 
 	private void initialize(int rowCount, int columnCount, int rule, boolean computerTurn) {
@@ -82,8 +84,6 @@ public class GomokuMainBoard extends JFrame {
 		getGomokuCellsPanel().getController().setHumanVsComputer(rule == HUMAN_VS_COMPUTER);
 		getGomokuCellsPanel().getController().setComputerVsComputer(rule == COMPUTER_VS_COMPUTER);
 		getGomokuCellsPanel().getController().setComputerTurn(computerTurn);
-		
-		getGomokuCellsPanel().getController().startNewGame();
 		
 		constraints.gridy++;
 		add(getAnalysisPanel(), constraints);
@@ -156,21 +156,21 @@ public class GomokuMainBoard extends JFrame {
 	
 	public JLabel getGlobalEvaluationLabel() {
 		if (globalEvaluationLabel == null) {
-			globalEvaluationLabel = new JLabel();
+			globalEvaluationLabel = new JLabel("0.0");
 		}
 		return globalEvaluationLabel;
 	}
 	
 	public JLabel getBlackEvaluationLabel() {
 		if (blackEvaluationLabel == null) {
-			blackEvaluationLabel = new JLabel();
+			blackEvaluationLabel = new JLabel("0.0");
 		}
 		return blackEvaluationLabel;
 	}
 	
 	public JLabel getWhiteEvaluationLabel() {
 		if (whiteEvaluationLabel == null) {
-			whiteEvaluationLabel = new JLabel();
+			whiteEvaluationLabel = new JLabel("0.0");
 		}
 		return whiteEvaluationLabel;
 	}
