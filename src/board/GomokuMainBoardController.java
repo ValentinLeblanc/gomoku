@@ -18,6 +18,7 @@ public class GomokuMainBoardController {
 		gomokuBoard.getResetButton().addActionListener(getActionListener());
 		gomokuBoard.getUndoButton().addActionListener(getActionListener());
 		gomokuBoard.getRedoButton().addActionListener(getActionListener());
+		gomokuBoard.getComputeMoveButton().addActionListener(getActionListener());
 		
 		gomokuBoard.getModel().addPropertyChangeListener(getPropetyChangeListener());
 	}
@@ -34,6 +35,20 @@ public class GomokuMainBoardController {
 					} else if (evt.getPropertyName().equals(GomokuModel.WHITE_EVALUATION_UPDATE)) {
 						gomokuBoard.getWhiteEvaluationLabel().setText("" + gomokuBoard.getModel().getWhiteEvaluation());
 						gomokuBoard.getGlobalEvaluationLabel().setText("" + (gomokuBoard.getModel().getBlackEvaluation() - gomokuBoard.getModel().getWhiteEvaluation()));
+					} else if (evt.getPropertyName().equals(GomokuModel.VALUE_UPDATE)) {
+						if (!gomokuBoard.getGomokuCellsPanel().getController().isComputerVsComputer() || !gomokuBoard.getGomokuCellsPanel().getController().isHumanVsComputer()) {
+							gomokuBoard.getResetButton().setEnabled(true);
+							gomokuBoard.getUndoButton().setEnabled(true);
+							gomokuBoard.getRedoButton().setEnabled(true);
+							if (!gomokuBoard.getGomokuCellsPanel().getController().isHumanVsComputer()) {
+								gomokuBoard.getComputeMoveButton().setEnabled(true);
+							}
+						}
+					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_MOVE_REQUEST)) {
+						gomokuBoard.getResetButton().setEnabled(false);
+						gomokuBoard.getUndoButton().setEnabled(false);
+						gomokuBoard.getRedoButton().setEnabled(false);
+						gomokuBoard.getComputeMoveButton().setEnabled(false);
 					}
 				}
 			};
@@ -55,6 +70,8 @@ public class GomokuMainBoardController {
 						gomokuBoard.getGomokuCellsPanel().getController().requestUndo();
 					} else  if (e.getSource() == gomokuBoard.getRedoButton()) {
 						gomokuBoard.getGomokuCellsPanel().getController().requestRedo();
+					} else  if (e.getSource() == gomokuBoard.getComputeMoveButton()) {
+						gomokuBoard.getGomokuCellsPanel().getController().requestEngineMove();
 					}
 				}
 			};

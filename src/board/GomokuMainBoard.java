@@ -1,10 +1,8 @@
 package board;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 
 import javax.swing.JButton;
@@ -28,46 +26,51 @@ public class GomokuMainBoard extends JFrame {
 
 	private int columnCount = DEFAULT_COLUMN_COUNT;
 	private int rowCount = DEFAULT_ROW_COUNT;
+	
+	public static final int HUMAN_VS_HUMAN = 0;
+	public static final int HUMAN_VS_COMPUTER = 1;
+	public static final int COMPUTER_VS_COMPUTER = 2;
 
 	private GomokuCellsPanel gomokuCellsPanel;
 	private JPanel analysisPanel;
 	private JButton resetButton;
 	private JButton undoButton;
 	private JButton redoButton;
+	private JButton computeMoveButton;
 	
 	private JLabel globalEvaluationLabel;
 	private JLabel blackEvaluationLabel;
 	private JLabel whiteEvaluationLabel;
 	
-	private GomokuMainBoardController controller;
-	
 	private GomokuModel model;
-	
-	public GomokuMainBoard(boolean computer) {
-		this(DEFAULT_ROW_COUNT, DEFAULT_COLUMN_COUNT, computer);
+
+	public GomokuMainBoard(int rule) {
+		this(DEFAULT_ROW_COUNT, DEFAULT_COLUMN_COUNT, rule);
 	}
 
-	public GomokuMainBoard(int rowCount, int columnCount, boolean computer) {
+	public GomokuMainBoard(int rowCount, int columnCount, int rule) {
 		super("Gomoku");
 		model = new GomokuModel(columnCount, rowCount);
 		
 		boolean computerTurn = false;
 		
-		if (computer) {
+		if (rule == HUMAN_VS_COMPUTER) {
 			int answer = JOptionPane.showConfirmDialog(null, "Play as black ? ", UIManager.getString("OptionPane.titleText"), JOptionPane.YES_NO_OPTION);
 			
 			if (answer == JOptionPane.NO_OPTION) {
 				computerTurn = true;
 			}
+		} else if (rule == COMPUTER_VS_COMPUTER) {
+			computerTurn = true;
 		}
 		
-		this.controller = new GomokuMainBoardController(this);
+		new GomokuMainBoardController(this);
 		this.rowCount = rowCount;
 		this.columnCount = columnCount;
-		initialize(rowCount, columnCount, computer, computerTurn);
+		initialize(rowCount, columnCount, rule, computerTurn);
 	}
 
-	private void initialize(int rowCount, int columnCount, boolean computer, boolean computerTurn) {
+	private void initialize(int rowCount, int columnCount, int rule, boolean computerTurn) {
 		setLayout(new GridBagLayout());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -76,11 +79,25 @@ public class GomokuMainBoard extends JFrame {
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		add(getGomokuCellsPanel(), constraints);
-		getGomokuCellsPanel().getController().setComputer(computer);
+		getGomokuCellsPanel().getController().setHumanVsComputer(rule == HUMAN_VS_COMPUTER);
+		getGomokuCellsPanel().getController().setComputerVsComputer(rule == COMPUTER_VS_COMPUTER);
 		getGomokuCellsPanel().getController().setComputerTurn(computerTurn);
+		
+		getGomokuCellsPanel().getController().startNewGame();
 		
 		constraints.gridy++;
 		add(getAnalysisPanel(), constraints);
+		
+		if (rule == HUMAN_VS_COMPUTER || rule == COMPUTER_VS_COMPUTER) {
+			getComputeMoveButton().setEnabled(false);
+		}
+		
+		if (rule == COMPUTER_VS_COMPUTER) {
+			getResetButton().setEnabled(false);
+			getUndoButton().setEnabled(false);
+			getRedoButton().setEnabled(false);
+		}
+		
 		setResizable(false);
 		pack();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
@@ -105,14 +122,14 @@ public class GomokuMainBoard extends JFrame {
 			GridBagConstraints constraints = new GridBagConstraints();
 			constraints.gridx = 0;
 			constraints.gridy = 0;
-			constraints.gridwidth = 2;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
 			
 			JPanel buttonsPanel = new JPanel();
 			buttonsPanel.add(getResetButton());
 			buttonsPanel.add(getUndoButton());
 			buttonsPanel.add(getRedoButton());
+			buttonsPanel.add(getComputeMoveButton());
 			
-			constraints.gridwidth = 1;
 			analysisPanel.add(new JLabel("Global evaluation : "), constraints);
 			constraints.gridx++;
 			analysisPanel.add(getGlobalEvaluationLabel(), constraints);
@@ -131,6 +148,7 @@ public class GomokuMainBoard extends JFrame {
 			
 			constraints.gridx = 0;
 			constraints.gridy++;
+			constraints.gridwidth = 2;
 			analysisPanel.add(buttonsPanel, constraints);
 		}
 		return analysisPanel;
@@ -176,6 +194,13 @@ public class GomokuMainBoard extends JFrame {
 			redoButton = new JButton("Redo");
 		}
 		return redoButton;
+	}
+	
+	public JButton getComputeMoveButton() {
+		if (computeMoveButton == null) {
+			computeMoveButton = new JButton("Compute next move");
+		}
+		return computeMoveButton;
 	}
 	
 	public int getColumnCount() {

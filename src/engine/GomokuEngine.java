@@ -339,7 +339,7 @@ public class GomokuEngine {
 							if (dataCopy[l][k] == GomokuModel.UNPLAYED) {
 								
 								dataCopy[l][k] = -playingColor;
-								double newEvaluation = engineCopy.computeEvaluation(playingColor) - engineCopy.computeEvaluation(-playingColor);
+								double newEvaluation =  engineCopy.computeEvaluation(playingColor) - 2 * engineCopy.computeEvaluation(-playingColor);
 								if (newEvaluation < minEvaluation) {
 									minEvaluation = newEvaluation;
 									opponentBestMove[0] = l;
@@ -352,7 +352,7 @@ public class GomokuEngine {
 					
 					dataCopy[opponentBestMove[0]][opponentBestMove[1]] = -playingColor;
 					
-					double newEvaluation = engineCopy.computeEvaluation(playingColor) - engineCopy.computeEvaluation(-playingColor);
+					double newEvaluation =  engineCopy.computeEvaluation(playingColor) - 2 * engineCopy.computeEvaluation(-playingColor);
 					if (newEvaluation > maxEvaluation) {
 						maxEvaluation = newEvaluation;
 						engineMove[0] = j;

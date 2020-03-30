@@ -63,7 +63,9 @@ public class GomokuModelController {
 						engineThread = new Thread() {
 							public void run() {
 								int[] engineMove = engine.computeMove(playingColor);
-								model.setValue(engineMove[0], engineMove[1], playingColor);
+								
+								MoveData newMove = new MoveData(engineMove[0], engineMove[1], playingColor);
+								handleMoveRequest(newMove);
 							}
 						};
 						engineThread.start();

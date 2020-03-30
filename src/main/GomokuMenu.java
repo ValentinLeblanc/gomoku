@@ -19,9 +19,10 @@ public class GomokuMenu extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	private JButton humanButton;
-	private JButton computerButton;
+	private JButton humanVsComputerButton;
+	private JButton computerVsComputerButton;
 
-	private static final int WIDTH = 350;
+	private static final int WIDTH = 550;
 	private static final int HEIGHT = 80;
 
 	public GomokuMenu() {
@@ -37,7 +38,8 @@ public class GomokuMenu extends JFrame {
 		setResizable(false);
 		setLayout(new GridLayout());
 		add(getHumanButton());
-		add(getComputerButton());
+		add(getHumanVsComputerButton());
+		add(getComputerVsComputerButton());
 	}
 
 	public JButton getHumanButton() {
@@ -48,12 +50,20 @@ public class GomokuMenu extends JFrame {
 		return humanButton;
 	}
 
-	public JButton getComputerButton() {
-		if (computerButton == null) {
-			computerButton = new JButton("Human vs computer");
-			computerButton.addActionListener(actionListener);
+	public JButton getHumanVsComputerButton() {
+		if (humanVsComputerButton == null) {
+			humanVsComputerButton = new JButton("Human vs computer");
+			humanVsComputerButton.addActionListener(actionListener);
 		}
-		return computerButton;
+		return humanVsComputerButton;
+	}
+	
+	public JButton getComputerVsComputerButton() {
+		if (computerVsComputerButton == null) {
+			computerVsComputerButton = new JButton("Computer vs computer");
+			computerVsComputerButton.addActionListener(actionListener);
+		}
+		return computerVsComputerButton;
 	}
 
 	private ActionListener actionListener = new ActionListener() {
@@ -62,10 +72,13 @@ public class GomokuMenu extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == getHumanButton()) {
 				setVisible(false);
-				GomokuMainBoard newBoard = new GomokuMainBoard(false);
+				GomokuMainBoard newBoard = new GomokuMainBoard(GomokuMainBoard.HUMAN_VS_HUMAN);
 				newBoard.setVisible(true);
-			} else if (e.getSource() == getComputerButton()) {
-				GomokuMainBoard newBoard = new GomokuMainBoard(true);
+			} else if (e.getSource() == getHumanVsComputerButton()) {
+				GomokuMainBoard newBoard = new GomokuMainBoard(GomokuMainBoard.HUMAN_VS_COMPUTER);
+				newBoard.setVisible(true);
+			} else if (e.getSource() == getComputerVsComputerButton()) {
+				GomokuMainBoard newBoard = new GomokuMainBoard(GomokuMainBoard.COMPUTER_VS_COMPUTER);
 				newBoard.setVisible(true);
 			}
 		}

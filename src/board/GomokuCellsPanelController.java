@@ -22,7 +22,8 @@ public class GomokuCellsPanelController {
 
 	private int currentPlayingColor = GomokuModel.BLACK;
 
-	private boolean computer;
+	private boolean humanVscomputer = false;
+	private boolean computerVscomputer = false;
 	private boolean computerTurn = false;
 	
 	public GomokuCellsPanelController(GomokuCellsPanel panel, GomokuModel model) {
@@ -57,11 +58,13 @@ public class GomokuCellsPanelController {
 					if (evt.getPropertyName().equals(GomokuModel.VALUE_UPDATE)) {
 						MoveData moveData = (MoveData) evt.getNewValue();
 						handleMoveUpdate(moveData);
-						if (computer) {
+						if (humanVscomputer) {
 							computerTurn = !computerTurn;
 							if (computerTurn) {
-								gomokuModel.firePropertyChange(GomokuModel.ENGINE_MOVE_REQUEST, currentPlayingColor);
+								requestEngineMove();
 							}
+						} else if (computerVscomputer) {
+							requestEngineMove();
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {
 						GomokuCellsPanelController.this.winData = (int[][]) evt.getNewValue();
@@ -77,7 +80,9 @@ public class GomokuCellsPanelController {
 	}
 	
 	private void handleCellPressedEvent(GomokuCell gomokuCell) {
-		gomokuModel.firePropertyChange(GomokuModel.MOVE_REQUEST, new MoveData(gomokuCell.getColumnIndex(), gomokuCell.getRowIndex(), currentPlayingColor));
+		if (winData == null && !computerVscomputer && !computerTurn) {
+			gomokuModel.firePropertyChange(GomokuModel.MOVE_REQUEST, new MoveData(gomokuCell.getColumnIndex(), gomokuCell.getRowIndex(), currentPlayingColor));
+		}
 	}
 	
 	private void handleMoveUpdate(MoveData moveData) {
@@ -128,6 +133,10 @@ public class GomokuCellsPanelController {
 		gomokuModel.firePropertyChange(GomokuModel.REDO_REQUEST);
 	}
 	
+	public void requestEngineMove() {
+		gomokuModel.firePropertyChange(GomokuModel.ENGINE_MOVE_REQUEST, currentPlayingColor);
+	}
+	
 	public void paintGomokuCell(GomokuCell gomokuCell, Color color) {
 		gomokuCell.setCircleColor(color);
 		gomokuCell.repaint();
@@ -137,16 +146,35 @@ public class GomokuCellsPanelController {
 		return winData;
 	}
 	
-	public void setComputer(boolean computer) {
-		this.computer= computer; 
+	public void setComputerVsComputer(boolean computerVscomputer) {
+		this.computerVscomputer= computerVscomputer; 
 	}
 	
-	public boolean getComputer() {
-		return computer; 
+	public void setHumanVsComputer(boolean humanVscomputer) {
+		this.humanVscomputer= humanVscomputer; 
 	}
 	
 	public void setComputerTurn(boolean computerTurn) {
 		this.computerTurn= computerTurn; 
+	}
+	
+	public boolean isComputerVsComputer() {
+		return computerVscomputer;
+	}
+	
+	public boolean isHumanVsComputer() {
+		return humanVscomputer; 
+	}
+	
+	public boolean isComputerTurn() {
+		return computerTurn; 
+	}
+	
+
+	public void startNewGame() {
+		if (humanVscomputer && computerTurn || computerVscomputer) {
+			requestEngineMove();
+		}
 	}
 	
 }

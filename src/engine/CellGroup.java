@@ -31,7 +31,7 @@ public class CellGroup {
 		int clearBefore = 0;
 		int clearAfter = 0;
 		
-		int groupValue = cellList.size() + 1;
+		int groupValue = cellList.size() + 2;
 		
 		if (direction == GomokuEngine.HORIZONTAL) {
 			
