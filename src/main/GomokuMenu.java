@@ -71,7 +71,6 @@ public class GomokuMenu extends JFrame {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == getHumanButton()) {
-				setVisible(false);
 				GomokuMainBoard newBoard = new GomokuMainBoard(GomokuMainBoard.HUMAN_VS_HUMAN);
 				newBoard.setVisible(true);
 			} else if (e.getSource() == getHumanVsComputerButton()) {

@@ -31,7 +31,7 @@ public class CellGroup {
 		int clearBefore = 0;
 		int clearAfter = 0;
 		
-		int groupValue = cellList.size() + 2;
+		int groupValue = cellList.size() + 1;
 		
 		if (direction == GomokuEngine.HORIZONTAL) {
 			
@@ -111,15 +111,15 @@ public class CellGroup {
 			}
 			
 			if (clearBefore > 0 && clearAfter > 0 && cellList.size() + clearBefore + clearAfter > 5) {
-				return  2 * groupValue * groupValue * groupValue;
+				return  groupValue * groupValue * groupValue * groupValue;
 			}
 			
 			if ((clearBefore == 0 || clearAfter == 0) && cellList.size() + clearBefore + clearAfter >= 5) {
-				return groupValue;
+				return  groupValue * groupValue * groupValue;
 			}
 			
 			if (cellList.size() + clearBefore + clearAfter == 5) {
-				return groupValue;
+				return groupValue * groupValue;
 			}
 		} else if (length - cellList.size() == 1) {
 			/**
@@ -127,7 +127,7 @@ public class CellGroup {
 			 */
 			
 			if (clearBefore > 0 && clearAfter > 0 && cellList.size() + clearBefore + clearAfter > 5) {
-				return  2 * groupValue;
+				return  groupValue * groupValue;
 			}
 			
 			if ((clearBefore == 0 || clearAfter == 0) && cellList.size() + clearBefore + clearAfter >= 5) {
@@ -139,7 +139,7 @@ public class CellGroup {
 			 */
 			
 			if (clearBefore > 0 && clearAfter > 0 && cellList.size() + clearBefore + clearAfter > 5) {
-				return  2 * groupValue;
+				return  groupValue;
 			}
 			
 			if ((clearBefore == 0 || clearAfter == 0) && cellList.size() + clearBefore + clearAfter >= 5) {
@@ -151,7 +151,7 @@ public class CellGroup {
 			 */
 			
 			if (clearBefore > 0 && clearAfter > 0 && cellList.size() + clearBefore + clearAfter > 5) {
-				return  2 * groupValue;
+				return  groupValue;
 			}
 			
 			if ((clearBefore == 0 || clearAfter == 0) && cellList.size() + clearBefore + clearAfter >= 5) {
@@ -164,6 +164,92 @@ public class CellGroup {
 	
 	public void addCell(Cell cell) {
 		cellList.add(cell);
+	}
+
+	public boolean isAnAttack(int number) {
+		Cell firstCell = cellList.get(0);
+		Cell lastCell = cellList.get(cellList.size() -1);
+		
+		int firstX = firstCell.getX();
+		int firstY = firstCell.getY();
+		
+		int lastX = lastCell.getX();
+		int lastY = lastCell.getY();
+		
+		int clearBefore = 0;
+		int clearAfter = 0;
+		
+		if (direction == GomokuEngine.HORIZONTAL) {
+			
+			length = Math.abs(lastX - firstX) + 1;
+			
+			int k = 1;
+			while (k < 5 && firstX - k >= 0 && data[firstX - k][firstY] == GomokuModel.UNPLAYED) {
+				clearBefore++;
+				k++;
+			}
+			
+			k = 1;
+			while (k < 5 && lastX + k < data.length && data[lastX + k][lastY] == GomokuModel.UNPLAYED) {
+				clearAfter++;
+				k++;
+			}
+		} else if (direction == GomokuEngine.VERTICAL) {
+			
+			length = Math.abs(lastY - firstY) + 1;
+			
+			int k = 1;
+			while (k < 5 && firstY - k >= 0 && data[firstX][firstY - k] == GomokuModel.UNPLAYED) {
+				clearBefore++;
+				k++;
+			}
+			
+			k = 1;
+			while (k < 5 && lastY + k < data.length && data[lastX][lastY + k] == GomokuModel.UNPLAYED) {
+				clearAfter++;
+				k++;
+			}
+		} else if (direction == GomokuEngine.DIAGONAL1) {
+			
+			length = Math.abs(lastY - firstY) + 1;
+			
+			int k = 1;
+			while (k < 5 && firstX - k >= 0 && firstY - k >= 0 && data[firstX - k][firstY - k] == GomokuModel.UNPLAYED) {
+				clearBefore++;
+				k++;
+			}
+			
+			k = 1;
+			while (k < 5 && lastX + k < data.length && lastY + k < data.length && data[lastX + k][lastY + k] == GomokuModel.UNPLAYED) {
+				clearAfter++;
+				k++;
+			}
+		} else if (direction == GomokuEngine.DIAGONAL2) {
+			
+			length = Math.abs(lastY - firstY) + 1;
+			
+			int k = 1;
+			while (k < 5 && firstX - k >= 0 && firstY + k < data.length && data[firstX - k][firstY + k] == GomokuModel.UNPLAYED) {
+				clearBefore++;
+				k++;
+			}
+			
+			k = 1;
+			while (k < 5 && lastX + k < data.length && lastY - k >= 0 && data[lastX + k][lastY - k] == GomokuModel.UNPLAYED) {
+				clearAfter++;
+				k++;
+			}
+		}
+		
+		if (cellList.size() == number) {
+			if (number < 5 - (length - cellList.size())) {
+				if (clearBefore > 0 && clearAfter > 0 && (length + clearBefore + clearAfter > 5)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 }

@@ -18,7 +18,7 @@ public class GomokuModelController {
 	public GomokuModelController(GomokuModel model) {
 		this.model = model;
 		model.addPropertyChangeListener(getModelListener());
-		engine = new GomokuEngine(model.getData());
+		engine = new GomokuEngine();
 	}
 
 	private PropertyChangeListener getModelListener() {
@@ -118,7 +118,7 @@ public class GomokuModelController {
 	private void handleEngineMoveRequest(int playingColor) {
 		engineThread = new Thread() {
 			public void run() {
-				int[] engineMove = engine.computeMove(playingColor);
+				int[] engineMove = engine.computeMove(model.getData(), playingColor);
 				
 				MoveData newMove = new MoveData(engineMove[0], engineMove[1], playingColor);
 				handleMoveRequest(newMove);
@@ -128,9 +128,9 @@ public class GomokuModelController {
 	}
 
 	private void updateEvaluation() {
-		getModel().setBlackEvaluation(engine.computeEvaluation(GomokuModel.BLACK));
+		getModel().setBlackEvaluation(engine.computeEvaluation(model.getData(), GomokuModel.BLACK));
 		getModel().firePropertyChange(GomokuModel.BLACK_EVALUATION_UPDATE);
-		getModel().setWhiteEvaluation(engine.computeEvaluation(GomokuModel.WHITE));
+		getModel().setWhiteEvaluation(engine.computeEvaluation(model.getData(), GomokuModel.WHITE));
 		getModel().firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
 	}
 

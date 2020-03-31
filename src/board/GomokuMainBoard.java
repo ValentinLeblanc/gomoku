@@ -74,7 +74,6 @@ public class GomokuMainBoard extends JFrame {
 
 	private void initialize(int rowCount, int columnCount, int rule, boolean computerTurn) {
 		setLayout(new GridBagLayout());
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		
 		GridBagConstraints constraints = new GridBagConstraints();
