@@ -30,6 +30,9 @@ public class GomokuModel extends Component {
 	
 	public static final String BLACK_EVALUATION_UPDATE = "blackEvaluationUpdate";
 	public static final String WHITE_EVALUATION_UPDATE = "whiteEvaluationUpdate";
+
+	public static final String ANALYSED_MOVE = "analysedMove";
+	public static final String LAST_MOVE = "lastMove";
 	
 	private int columnCount;
 	private int rowCount;
@@ -68,6 +71,8 @@ public class GomokuModel extends Component {
 		
 		MoveData newMove = new MoveData(columnIndex, rowIndex, value);
 		firePropertyChange(VALUE_UPDATE, newMove);
+		
+		firePropertyChange(LAST_MOVE, newMove);
 	}
 
 	public GomokuModelController getModelController() {

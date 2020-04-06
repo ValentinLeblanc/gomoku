@@ -18,7 +18,7 @@ public class GomokuModelController {
 	public GomokuModelController(GomokuModel model) {
 		this.model = model;
 		model.addPropertyChangeListener(getModelListener());
-		engine = new GomokuEngine();
+		engine = new GomokuEngine(model);
 	}
 
 	private PropertyChangeListener getModelListener() {

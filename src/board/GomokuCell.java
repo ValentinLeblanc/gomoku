@@ -22,11 +22,15 @@ public class GomokuCell extends JPanel {
 	private static final Color CELL_COLOR = Color.orange.darker();
 	
 	private Color circleColor;
+
+	private boolean analysed = false;
+	private boolean lastMove = false;
 	
 	public static final int CELL_WIDTH = 50;
 	public static final int CELL_HEIGHT = 50;
 
 	private static final int CIRCLE_GAP = 4;
+	private static final int CIRCLE_GAP_RED = 20;
 	
 	public GomokuCell(int columnIndex, int rowIndex) {
 		this.columnIndex = columnIndex;
@@ -63,6 +67,16 @@ public class GomokuCell extends JPanel {
 		    g.setColor(circleColor);
 		    g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
 		}
+		
+		if (analysed) {
+		    g.setColor(Color.GREEN.darker());
+		    g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
+		}
+		
+		if (lastMove) {
+		    g.setColor(Color.RED);
+		    g.fillOval(CIRCLE_GAP_RED, CIRCLE_GAP_RED, CELL_WIDTH - 2 * CIRCLE_GAP_RED - 1, CELL_HEIGHT - 2 * CIRCLE_GAP_RED - 1);
+		}
 	}
 
 	public Color getCircleColor() {
@@ -71,5 +85,13 @@ public class GomokuCell extends JPanel {
 
 	public void setCircleColor(Color circleColor) {
 		this.circleColor = circleColor;
+	}
+
+	public void setAnalysed(boolean analysed) {
+		this.analysed = analysed;
+	}
+	
+	public void setLastMove(boolean lastMove) {
+		this.lastMove = lastMove;
 	}
 }

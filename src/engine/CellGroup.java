@@ -166,7 +166,7 @@ public class CellGroup {
 		cellList.add(cell);
 	}
 
-	public boolean isAnAttack(int number) {
+	public List<int[]> findPotentialDefensiveMoves(int number) {
 		Cell firstCell = cellList.get(0);
 		Cell lastCell = cellList.get(cellList.size() -1);
 		
@@ -242,13 +242,93 @@ public class CellGroup {
 		}
 		
 		if (cellList.size() == number) {
-			if (number < 5 - (length - cellList.size())) {
+			if (length < 5) {
 				if (clearBefore > 0 && clearAfter > 0 && (length + clearBefore + clearAfter > 5)) {
-					return true;
+					
+					List<int[]> defendingMoves = new ArrayList<int[]>();
+					
+					if (direction == GomokuEngine.HORIZONTAL) {
+						
+						int lowerBound = length + clearAfter < 5 ? 5 - length : 1;
+						int upperBound = length + clearBefore < 5 ? 5 - length : 1;
+						
+						int currentX = firstX - lowerBound;
+						int currentY = firstY;
+						while (currentX <= lastX + upperBound) {
+							if (!contains(currentX, currentY)) {
+								int[] defendingMove = new int[2];
+								defendingMove[0] = currentX;
+								defendingMove[1] = currentY;
+								defendingMoves.add(defendingMove);
+							}
+							currentX++;
+						}
+					} else if (direction == GomokuEngine.VERTICAL) {
+						
+						int lowerBound = length + clearAfter < 5 ? 5 - length : 1;
+						int upperBound = length + clearBefore < 5 ? 5 - length : 1;
+						
+						int currentX = firstX;
+						int currentY = firstY - lowerBound;
+						while (currentY <= lastY + upperBound) {
+							if (!contains(currentX, currentY)) {
+								int[] defendingMove = new int[2];
+								defendingMove[0] = currentX;
+								defendingMove[1] = currentY;
+								defendingMoves.add(defendingMove);
+							}
+							currentY++;
+						}
+					} else if (direction == GomokuEngine.DIAGONAL1) {
+						
+						int lowerBound = length + clearAfter < 5 ? 5 - length : 1;
+						int upperBound = length + clearBefore < 5 ? 5 - length : 1;
+						
+						int currentX = firstX - lowerBound;
+						int currentY = firstY - lowerBound;
+						while (currentX <= lastX + upperBound) {
+							if (!contains(currentX, currentY)) {
+								int[] defendingMove = new int[2];
+								defendingMove[0] = currentX;
+								defendingMove[1] = currentY;
+								defendingMoves.add(defendingMove);
+							}
+							currentX++;
+							currentY++;
+						}
+					} else if (direction == GomokuEngine.DIAGONAL2) {
+						
+						int lowerBound = length + clearAfter < 5 ? 5 - length : 1;
+						int upperBound = length + clearBefore < 5 ? 5 - length : 1;
+						
+						int currentX = firstX - lowerBound;
+						int currentY = firstY + lowerBound;
+						while (currentX <= lastX + upperBound) {
+							if (!contains(currentX, currentY)) {
+								int[] defendingMove = new int[2];
+								defendingMove[0] = currentX;
+								defendingMove[1] = currentY;
+								defendingMoves.add(defendingMove);
+							}
+							currentX++;
+							currentY--;
+						}
+					}
+					
+					return defendingMoves;
 				}
 			}
 		}
 		
+		return null;
+	}
+	
+	public boolean contains(int x, int y) {
+		for (Cell cell : cellList) {
+			if (cell.getX() == x && cell.getY() == y) {
+				return true;
+			}
+		}
 		return false;
 	}
 	
