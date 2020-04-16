@@ -65,7 +65,7 @@ public class GomokuCellsPanelController {
 							if (computerTurn) {
 								requestEngineMove();
 							}
-						} else if (computerVscomputer) {
+						} else if (computerVscomputer && winData == null) {
 							requestEngineMove();
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {

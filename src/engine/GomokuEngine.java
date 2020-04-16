@@ -233,6 +233,7 @@ public class GomokuEngine {
 		
 		CellGroup currentCellGroup = null;
 		int k = 0;
+		int clear = 0;
 		
 		while (k < stripe.length) {
 			if (data[stripe[k][0]][stripe[k][1]] == playingColor) {
@@ -243,6 +244,12 @@ public class GomokuEngine {
 				currentCellGroup.addCell(new Cell(stripe[k][0], stripe[k][1]));
 			} else if (data[stripe[k][0]][stripe[k][1]] == -playingColor) {
 				currentCellGroup = null;
+			} else if (currentCellGroup != null && data[stripe[k][0]][stripe[k][1]] == GomokuModel.UNPLAYED) {
+				clear++;
+				if (currentCellGroup.getCellList().size() + clear == 5) {
+					currentCellGroup = null;
+					clear = 0;
+				}
 			}
 			k++;
 		}
@@ -368,7 +375,6 @@ public class GomokuEngine {
 		int[] obviousMove = findObviousMove(data, playingColor);
 
 		if (obviousMove != null) {
-			System.out.println("compte after obvious = " + getMovePlayedNumber(data));
 			return obviousMove;
 		}
 
@@ -389,7 +395,8 @@ public class GomokuEngine {
 		
 		int[] minMax = findBestMoveAmongTheseMoves(data, playingColor, analysedMoves);
 		
-		System.out.println("compte after minMax = " + getMovePlayedNumber(data));
+		System.out.println("minMax");
+
 		return minMax;
 	}
 	
@@ -510,25 +517,29 @@ public class GomokuEngine {
 		// check for a win
 		int[] winningMove = findWinningMove(data, playingColor);
 		if (winningMove != null) {
+			System.out.println("win");
 			return winningMove;
 		}
 		
 		// defend from an enemy win
 		int[] opponentWinningMove = findWinningMove(data, -playingColor);
 		if (opponentWinningMove != null) {
+			System.out.println("counter win");
 			return opponentWinningMove;
 		}
 		
 		// check for a double strike
 		int[] doubleAttackMove = findDouble4AttackMove(data, playingColor);
 		if (doubleAttackMove != null) {
+			System.out.println("imminent 4-line strike found");
 			return doubleAttackMove;
 		}
 		
 		// check for another strike
-		Object[] result = findStrikeWinningMove(data, playingColor);
+		Object[] result = findStrikeWinningMove(data, playingColor, null);
 		
 		if (result != null) {
+			System.out.println("4-line strike found");
 			int[] strikeWinningMove = (int[]) result[0];
 			return strikeWinningMove;
 		}
@@ -537,31 +548,49 @@ public class GomokuEngine {
 		List<int[]> defendingMoves = findPotentialDefensiveMoves(data, -playingColor, 3);
 
 		if (!defendingMoves.isEmpty()) {
+			System.out.println("counter imminent 4-line strike found");
 			return findBestMoveAmongTheseMoves(data, playingColor, defendingMoves);
 		}
 		
 		// defend from an enemy strike
-		result = findStrikeWinningMove(data, -playingColor);
+		result = findStrikeWinningMove(data, -playingColor, null);
 		if (result != null) {
 			defendingMoves = (List<int[]>) result[1];
 			
 			if (!defendingMoves.isEmpty()) {
-				return findBestMoveAmongTheseMoves(data, playingColor, defendingMoves);
+				System.out.println("counter 4-line strike found");
+				
+				int[] defendingMove = findBestMoveAmongTheseMoves(data, playingColor, defendingMoves);
+				
+				data[defendingMove[0]][defendingMove[1]] = playingColor;
+				
+				while (findStrikeWinningMove(data, -playingColor, null) != null) {
+					data[defendingMove[0]][defendingMove[1]] = GomokuModel.UNPLAYED;
+					defendingMoves.remove(defendingMove);
+					defendingMove = findBestMoveAmongTheseMoves(data, playingColor, defendingMoves);
+					data[defendingMove[0]][defendingMove[1]] = playingColor;
+				}
+				
+				data[defendingMove[0]][defendingMove[1]] = GomokuModel.UNPLAYED;
+				return defendingMove;
+				
 			}
 		}
 		
 		// check for a double 3-stone attack
 		int[] double3AttackMove = findDouble3AttackMove(data, playingColor);
 		if (double3AttackMove != null) {
+			System.out.println("imminent 3-line strike found");
 			return double3AttackMove;
 		}
 		
 		// check for a double 3-free stone connection
 //		result = findDoubleStrikeConnectionMove(data, playingColor);
-		if (result != null) {
-			int[] strikeWinningMove = (int[]) result[0];
-			return strikeWinningMove;
-		}
+//		if (result != null) {
+//			System.out.println("3-line strike found");
+//			int[] strikeWinningMove = (int[]) result[0];
+//			return strikeWinningMove;
+//		}
 
 		return null;
 	}
@@ -808,7 +837,7 @@ public class GomokuEngine {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object[] findStrikeWinningMove(int[][] data, int playingColor) {
+	private Object[] findStrikeWinningMove(int[][] data, int playingColor, List<int[]> alreadyTriedMoves) {
 
 		Object[] result = null;
 		
@@ -826,7 +855,7 @@ public class GomokuEngine {
 				// opponent defense
 				data[winningMove[0]][winningMove[1]] = -playingColor;
 				
-				Object[] nextAttemp = findStrikeWinningMove(data, playingColor);
+				Object[] nextAttemp = findStrikeWinningMove(data, playingColor, alreadyTriedMoves);
 				
 				data[opponentWinningMove[0]][opponentWinningMove[1]] = GomokuModel.UNPLAYED;
 				data[winningMove[0]][winningMove[1]] = GomokuModel.UNPLAYED;
@@ -841,9 +870,18 @@ public class GomokuEngine {
 		} else {
 			List<int[]> attackMoves = findAttack4Moves(data, playingColor);
 			
-			for (int[] attackMove : attackMoves) {
+			attackMoveLoop : for (int[] attackMove : attackMoves) {
+				
+				if (alreadyTriedMoves != null) {
+					for (int[] alreadyTriedMove : alreadyTriedMoves) {
+						if (alreadyTriedMove[0] == attackMove[0] && alreadyTriedMove[1] == attackMove[1]) {
+							continue attackMoveLoop;
+						}
+					}
+				}
+				
 				// attack
-				data[attackMove[0]][attackMove[1]] = playingColor;
+ 				data[attackMove[0]][attackMove[1]] = playingColor;
 				
 				// defend
 				int[] defendingMove = findWinningMove(data, playingColor);
@@ -864,7 +902,8 @@ public class GomokuEngine {
 					return result;
 				}
 				
-				Object[] nextAttemp = findStrikeWinningMove(data, playingColor);
+				
+				Object[] nextAttemp = findStrikeWinningMove(data, playingColor, alreadyTriedMoves);
 				
 				data[attackMove[0]][attackMove[1]] = GomokuModel.UNPLAYED;
 				data[defendingMove[0]][defendingMove[1]] = GomokuModel.UNPLAYED;
@@ -879,6 +918,12 @@ public class GomokuEngine {
 
 					return result;
 				}
+				
+				if (alreadyTriedMoves == null) {
+					alreadyTriedMoves = new ArrayList<int[]>();
+				}
+				
+				alreadyTriedMoves.add(attackMove);
 			}
 			
 		}
@@ -919,7 +964,7 @@ public class GomokuEngine {
 		}
 		
 		// case of an opponent strike
-		Object[] opponentWinningStrike = findStrikeWinningMove(data, -playingColor);
+		Object[] opponentWinningStrike = findStrikeWinningMove(data, -playingColor, null);
 		if (opponentWinningStrike != null) {
 			
 			// defend
@@ -1009,7 +1054,7 @@ public class GomokuEngine {
 			
 			int[] opponentBestMove = new int[2];
 			
-			double minEvaluation = Double.NEGATIVE_INFINITY;
+			double minEvaluation = Double.POSITIVE_INFINITY;
 			
 			data[analysedMove[0]][analysedMove[1]] = playingColor;
 			
@@ -1019,7 +1064,7 @@ public class GomokuEngine {
 						data[j][i] = -playingColor;
 						
 						double evaluation = computeEvaluation(data, playingColor) - OPPONENT_EVALUATION_FACTOR * computeEvaluation(data, -playingColor);
-						if (evaluation > minEvaluation) {
+						if (evaluation < minEvaluation) {
 							minEvaluation = evaluation;
 							opponentBestMove[0] = j;
 							opponentBestMove[1] = i;
@@ -1027,7 +1072,7 @@ public class GomokuEngine {
 						
 						data[j][i] = GomokuModel.UNPLAYED;
 						
-						if (minEvaluation < maxEvaluation) {
+						if (minEvaluation < maxEvaluation) { 
 							break;
 						}
 					}

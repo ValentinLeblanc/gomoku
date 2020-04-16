@@ -331,5 +331,9 @@ public class CellGroup {
 		}
 		return false;
 	}
+
+	public List<Cell> getCellList() {
+		return cellList;
+	}
 	
 }
