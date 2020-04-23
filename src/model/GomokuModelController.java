@@ -133,5 +133,13 @@ public class GomokuModelController {
 		getModel().setWhiteEvaluation(engine.computeEvaluation(model.getData(), GomokuModel.WHITE));
 		getModel().firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
 	}
+	
+	public int[] getLastMove() {
+		int[] lastMove = new int[2];
+		lastMove[0] = this.lastMove.getColumnIndex();
+		lastMove[1] = this.lastMove.getRowIndex();
+		
+		return lastMove;
+	}
 
 }

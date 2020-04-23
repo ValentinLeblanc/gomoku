@@ -25,7 +25,9 @@ public class GomokuCellsPanelController {
 	private boolean humanVscomputer = false;
 	private boolean computerVscomputer = false;
 	private boolean computerTurn = false;
+	private boolean isUndoing = false;
 	private GomokuCell analyzedCell;
+	private GomokuCell secondAnalyzedCell;
 	private GomokuCell lastMoveCell;
 	
 	public GomokuCellsPanelController(GomokuCellsPanel panel, GomokuModel model) {
@@ -62,10 +64,10 @@ public class GomokuCellsPanelController {
 						handleMoveUpdate(moveData);
 						if (humanVscomputer) {
 							computerTurn = !computerTurn;
-							if (computerTurn) {
+							if (computerTurn && !isUndoing) {
 								requestEngineMove();
 							}
-						} else if (computerVscomputer && winData == null) {
+						} else if (computerVscomputer && winData == null && !isUndoing) {
 							requestEngineMove();
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {
@@ -75,6 +77,8 @@ public class GomokuCellsPanelController {
 						handleResetUpdate();
 					} else if (evt.getPropertyName().equals(GomokuModel.ANALYSED_MOVE)) {
 						handleAnalysedMoveUpdate((int[]) evt.getNewValue());
+					} else if (evt.getPropertyName().equals(GomokuModel.SECOND_ANALYSED_MOVE)) {
+						handleSecondAnalysedMoveUpdate((int[]) evt.getNewValue());
 					} else if (evt.getPropertyName().equals(GomokuModel.LAST_MOVE)) {
 						handleLastMoveUpdate((MoveData) evt.getNewValue());
 					}
@@ -129,15 +133,42 @@ public class GomokuCellsPanelController {
 	
 	private void handleAnalysedMoveUpdate(int[] analysedMove) {
 		
-		GomokuCell gomokuCell = (GomokuCell) panel.getComponent(analysedMove[1] * panel.getColumnCount() + analysedMove[0]);
-
 		if (analyzedCell != null) {
 			analyzedCell.setAnalysed(false);
+			analyzedCell.setCircleColor(null);
 		}
 		
-		analyzedCell = gomokuCell;
+		if (analysedMove != null) {
+			GomokuCell gomokuCell = (GomokuCell) panel.getComponent(analysedMove[1] * panel.getColumnCount() + analysedMove[0]);
+			
+			analyzedCell = gomokuCell;
+			
+			Color color = currentPlayingColor == GomokuModel.BLACK ? Color.BLACK : Color.WHITE;
+			analyzedCell.setCircleColor(color);
+			analyzedCell.setAnalysed(true);
+		}
 		
-		analyzedCell.setAnalysed(true);
+		
+		panel.repaint();
+	}
+	
+	private void handleSecondAnalysedMoveUpdate(int[] secondAnalysedMove) {
+		
+		if (secondAnalyzedCell != null) {
+			secondAnalyzedCell.setSecondAnalysed(false);
+			secondAnalyzedCell.setCircleColor(null);
+		}
+		
+		if (secondAnalysedMove != null) {
+			GomokuCell gomokuCell = (GomokuCell) panel.getComponent(secondAnalysedMove[1] * panel.getColumnCount() + secondAnalysedMove[0]);
+			
+			secondAnalyzedCell = gomokuCell;
+			
+			Color color = currentPlayingColor == GomokuModel.BLACK ? Color.WHITE : Color.BLACK;
+			secondAnalyzedCell.setCircleColor(color);
+			secondAnalyzedCell.setSecondAnalysed(true);
+		}
+		
 		
 		panel.repaint();
 	}
@@ -201,6 +232,14 @@ public class GomokuCellsPanelController {
 		if (humanVscomputer && computerTurn || computerVscomputer) {
 			requestEngineMove();
 		}
+	}
+
+	public boolean isUndoing() {
+		return isUndoing;
+	}
+
+	public void setUndoing(boolean isUndoing) {
+		this.isUndoing = isUndoing;
 	}
 	
 }

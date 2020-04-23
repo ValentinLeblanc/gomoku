@@ -32,6 +32,7 @@ public class GomokuModel extends Component {
 	public static final String WHITE_EVALUATION_UPDATE = "whiteEvaluationUpdate";
 
 	public static final String ANALYSED_MOVE = "analysedMove";
+	public static final String SECOND_ANALYSED_MOVE = "secondAnalysedMove";
 	public static final String LAST_MOVE = "lastMove";
 	
 	private int columnCount;

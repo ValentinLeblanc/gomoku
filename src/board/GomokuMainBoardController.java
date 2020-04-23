@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import engine.GomokuEngine;
 import model.GomokuModel;
 
 public class GomokuMainBoardController {
@@ -31,7 +32,7 @@ public class GomokuMainBoardController {
 				public void propertyChange(PropertyChangeEvent evt) {
 					if (evt.getPropertyName().equals(GomokuModel.BLACK_EVALUATION_UPDATE)) {
 						gomokuBoard.getBlackEvaluationLabel().setText("" + gomokuBoard.getModel().getBlackEvaluation());
-						gomokuBoard.getGlobalEvaluationLabel().setText("" + (gomokuBoard.getModel().getBlackEvaluation() - gomokuBoard.getModel().getWhiteEvaluation()));
+						gomokuBoard.getGlobalEvaluationLabel().setText("" + (gomokuBoard.getModel().getBlackEvaluation() - GomokuEngine.OPPONENT_EVALUATION_FACTOR * gomokuBoard.getModel().getWhiteEvaluation()));
 					} else if (evt.getPropertyName().equals(GomokuModel.WHITE_EVALUATION_UPDATE)) {
 						gomokuBoard.getWhiteEvaluationLabel().setText("" + gomokuBoard.getModel().getWhiteEvaluation());
 						gomokuBoard.getGlobalEvaluationLabel().setText("" + (gomokuBoard.getModel().getBlackEvaluation() - gomokuBoard.getModel().getWhiteEvaluation()));
@@ -40,9 +41,7 @@ public class GomokuMainBoardController {
 							gomokuBoard.getResetButton().setEnabled(true);
 							gomokuBoard.getUndoButton().setEnabled(true);
 							gomokuBoard.getRedoButton().setEnabled(true);
-							if (!gomokuBoard.getGomokuCellsPanel().getController().isHumanVsComputer()) {
-								gomokuBoard.getComputeMoveButton().setEnabled(true);
-							}
+							gomokuBoard.getComputeMoveButton().setEnabled(true);
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_MOVE_REQUEST)) {
 						gomokuBoard.getResetButton().setEnabled(false);
@@ -67,10 +66,12 @@ public class GomokuMainBoardController {
 					if (e.getSource() == gomokuBoard.getResetButton()) {
 						gomokuBoard.getModel().firePropertyChange(GomokuModel.RESET_REQUEST);
 					} else  if (e.getSource() == gomokuBoard.getUndoButton()) {
+						gomokuBoard.getGomokuCellsPanel().getController().setUndoing(true);
 						gomokuBoard.getModel().firePropertyChange(GomokuModel.UNDO_REQUEST);
 					} else  if (e.getSource() == gomokuBoard.getRedoButton()) {
 						gomokuBoard.getModel().firePropertyChange(GomokuModel.REDO_REQUEST);
 					} else  if (e.getSource() == gomokuBoard.getComputeMoveButton()) {
+						gomokuBoard.getGomokuCellsPanel().getController().setUndoing(false);
 						gomokuBoard.getGomokuCellsPanel().getController().requestEngineMove();
 					}
 				}

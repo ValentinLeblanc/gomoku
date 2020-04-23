@@ -24,6 +24,7 @@ public class GomokuCell extends JPanel {
 	private Color circleColor;
 
 	private boolean analysed = false;
+	private boolean secondAnalysed = false;
 	private boolean lastMove = false;
 	
 	public static final int CELL_WIDTH = 50;
@@ -62,15 +63,24 @@ public class GomokuCell extends JPanel {
 		g2.draw(new Line2D.Float(CELL_WIDTH - 1, 0, CELL_WIDTH - 1, CELL_HEIGHT - 1));
 		g2.draw(new Line2D.Float(0, 0, CELL_WIDTH - 1, 0));
 		g2.draw(new Line2D.Float(0, CELL_HEIGHT - 1, CELL_WIDTH - 1, CELL_HEIGHT - 1));
-
-		if (circleColor != null) {
-		    g.setColor(circleColor);
-		    g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
-		}
 		
 		if (analysed) {
 		    g.setColor(Color.GREEN.darker());
-		    g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
+			g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
+			if (circleColor != null) {
+				g.setColor(circleColor);
+				g.fillOval(2 * CIRCLE_GAP, 2 * CIRCLE_GAP, CELL_WIDTH - 4 * CIRCLE_GAP - 1, CELL_HEIGHT - 4 * CIRCLE_GAP - 1);
+			}
+		} else if (secondAnalysed) {
+		    g.setColor(Color.GREEN.darker());
+			g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
+			if (circleColor != null) {
+				g.setColor(circleColor);
+				g.fillOval(2 * CIRCLE_GAP, 2 * CIRCLE_GAP, CELL_WIDTH - 4 * CIRCLE_GAP - 1, CELL_HEIGHT - 4 * CIRCLE_GAP - 1);
+			}
+		} else if (circleColor != null) {
+			g.setColor(circleColor);
+			g.fillOval(CIRCLE_GAP, CIRCLE_GAP, CELL_WIDTH - 2 * CIRCLE_GAP - 1, CELL_HEIGHT - 2 * CIRCLE_GAP - 1);
 		}
 		
 		if (lastMove) {
@@ -89,6 +99,10 @@ public class GomokuCell extends JPanel {
 
 	public void setAnalysed(boolean analysed) {
 		this.analysed = analysed;
+	}
+	
+	public void setSecondAnalysed(boolean secondAnalysed) {
+		this.secondAnalysed = secondAnalysed;
 	}
 	
 	public void setLastMove(boolean lastMove) {

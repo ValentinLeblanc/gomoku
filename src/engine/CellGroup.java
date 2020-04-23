@@ -1,16 +1,19 @@
 package engine;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import model.GomokuModel;
 
 public class CellGroup {
 
-	private int[][] data;
 	private int direction;
 	private int length = 0;
 	private List<Cell> cellList;
+	private int clearBefore;
+	private int clearAfter;
+	private int[][] data;
 
 	public CellGroup(int[][] data, int direction) {
 		this.data = data;
@@ -18,7 +21,11 @@ public class CellGroup {
 		cellList = new ArrayList<Cell>();
 	}
 	
-	public double computePotential() {
+	private void updateGroup() {
+		
+		clearBefore = 0;
+		clearAfter = 0;
+		
 		Cell firstCell = cellList.get(0);
 		Cell lastCell = cellList.get(cellList.size() -1);
 		
@@ -27,11 +34,7 @@ public class CellGroup {
 		
 		int lastX = lastCell.getX();
 		int lastY = lastCell.getY();
-		
-		int clearBefore = 0;
-		int clearAfter = 0;
-		
-		int groupValue = cellList.size() + 1;
+
 		
 		if (direction == GomokuEngine.HORIZONTAL) {
 			
@@ -94,6 +97,12 @@ public class CellGroup {
 				k++;
 			}
 		}
+
+	}
+	
+	public double computeOldPotential() {
+		
+		int groupValue = cellList.size() + 1;
 		
 		if (length + clearBefore + clearAfter < 5) {
 			/***
@@ -162,84 +171,57 @@ public class CellGroup {
 		return 0;
 	}
 	
+	public double computePotential() {
+		
+		double value = 0;
+		
+		if (cellList.size() == 5) {
+			value += 10000;
+		} else if (cellList.size() == 4) {
+			int singleThreatNumber = getSingleThreatMoves(4).size();
+
+			if (singleThreatNumber >= 2) {
+				value += 1000;
+			} else if (singleThreatNumber == 1) {
+				value += 100;
+			} 
+		} else if (cellList.size() == 3) {
+			int singleThreatNumber = getSingleThreatMoves(3).size();
+			int doubleThreatNumber = getDoubleThreatMoves(3).size();
+			value += 100 * doubleThreatNumber;
+			value += 20 * singleThreatNumber;
+		} else if (cellList.size() == 2) {
+			int singleThreatNumber = getSingleThreatMoves(2).size();
+			int doubleThreatNumber = getDoubleThreatMoves(2).size();
+			
+			value += 5 * doubleThreatNumber;
+			value += 2 * singleThreatNumber;
+		} else if (cellList.size() == 1) {
+			int singleThreatNumber = getSingleThreatMoves(1).size();
+			int doubleThreatNumber = getDoubleThreatMoves(1).size();
+
+			value += doubleThreatNumber;
+			value += singleThreatNumber;
+		}
+		
+		return value;
+	}
+
 	public void addCell(Cell cell) {
 		cellList.add(cell);
+		cell.getCellGroups().add(this);
+		updateGroup();
 	}
 
 	public List<int[]> findPotentialDefensiveMoves(int number) {
 		Cell firstCell = cellList.get(0);
-		Cell lastCell = cellList.get(cellList.size() -1);
+		Cell lastCell = cellList.get(cellList.size() - 1);
 		
 		int firstX = firstCell.getX();
 		int firstY = firstCell.getY();
 		
 		int lastX = lastCell.getX();
 		int lastY = lastCell.getY();
-		
-		int clearBefore = 0;
-		int clearAfter = 0;
-		
-		if (direction == GomokuEngine.HORIZONTAL) {
-			
-			length = Math.abs(lastX - firstX) + 1;
-			
-			int k = 1;
-			while (k < 5 && firstX - k >= 0 && data[firstX - k][firstY] == GomokuModel.UNPLAYED) {
-				clearBefore++;
-				k++;
-			}
-			
-			k = 1;
-			while (k < 5 && lastX + k < data.length && data[lastX + k][lastY] == GomokuModel.UNPLAYED) {
-				clearAfter++;
-				k++;
-			}
-		} else if (direction == GomokuEngine.VERTICAL) {
-			
-			length = Math.abs(lastY - firstY) + 1;
-			
-			int k = 1;
-			while (k < 5 && firstY - k >= 0 && data[firstX][firstY - k] == GomokuModel.UNPLAYED) {
-				clearBefore++;
-				k++;
-			}
-			
-			k = 1;
-			while (k < 5 && lastY + k < data.length && data[lastX][lastY + k] == GomokuModel.UNPLAYED) {
-				clearAfter++;
-				k++;
-			}
-		} else if (direction == GomokuEngine.DIAGONAL1) {
-			
-			length = Math.abs(lastY - firstY) + 1;
-			
-			int k = 1;
-			while (k < 5 && firstX - k >= 0 && firstY - k >= 0 && data[firstX - k][firstY - k] == GomokuModel.UNPLAYED) {
-				clearBefore++;
-				k++;
-			}
-			
-			k = 1;
-			while (k < 5 && lastX + k < data.length && lastY + k < data.length && data[lastX + k][lastY + k] == GomokuModel.UNPLAYED) {
-				clearAfter++;
-				k++;
-			}
-		} else if (direction == GomokuEngine.DIAGONAL2) {
-			
-			length = Math.abs(lastY - firstY) + 1;
-			
-			int k = 1;
-			while (k < 5 && firstX - k >= 0 && firstY + k < data.length && data[firstX - k][firstY + k] == GomokuModel.UNPLAYED) {
-				clearBefore++;
-				k++;
-			}
-			
-			k = 1;
-			while (k < 5 && lastX + k < data.length && lastY - k >= 0 && data[lastX + k][lastY - k] == GomokuModel.UNPLAYED) {
-				clearAfter++;
-				k++;
-			}
-		}
 		
 		if (cellList.size() == number) {
 			if (length < 5) {
@@ -316,6 +298,8 @@ public class CellGroup {
 					}
 					
 					return defendingMoves;
+				} else if (number == 4) {
+					
 				}
 			}
 		}
@@ -335,5 +319,723 @@ public class CellGroup {
 	public List<Cell> getCellList() {
 		return cellList;
 	}
+
+	public boolean isWinGroup() {
+		return cellList.size() == 5;
+	}
+
+	public boolean isGroupSingleThreat(int number) {
+		return cellList.size() == number && hasEnoughSpace(false);
+	}
 	
+	public boolean isGroupDoubleThreat(int number) {
+		return cellList.size() == number && hasEnoughSpace(true);
+	}
+	
+	public boolean hasEnoughSpace(boolean doubleThreat) {
+		if (doubleThreat) {
+			return clearBefore > 0 && clearAfter > 0 && length + clearBefore + clearAfter >= 6;
+		}
+		return length + clearBefore + clearAfter >= 5;
+	}
+	
+	public List<int[]> getSingleThreatMoves(int number) {
+		
+		List<int[]> threatMoves = new ArrayList<int[]>();
+		
+		// if the size is not compatible
+		if (cellList.size() != number) {
+			return threatMoves;
+		}
+		
+		// if there is not enough space
+		if (length + clearBefore + clearAfter < 5) {
+			return threatMoves;
+		}
+		
+		Cell firstCell = cellList.get(0);
+		Cell lastCell = cellList.get(cellList.size() - 1);
+		
+		int firstX = firstCell.getX();
+		int firstY = firstCell.getY();
+		
+		int lastX = lastCell.getX();
+		int lastY = lastCell.getY();
+		
+		
+		int xIncrement = 0;
+		int yIncrement = 0;
+		
+		if (direction == GomokuEngine.HORIZONTAL) {
+			xIncrement = 1;
+		} else if (direction == GomokuEngine.VERTICAL) {
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL1) {
+			xIncrement = 1;
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL2) {
+			xIncrement = 1;
+			yIncrement = -1;
+		}
+		
+		// in-between moves
+		if (number > 1) {
+			int[] currentMove = new int[2];
+			currentMove[0] = firstX + xIncrement;
+			currentMove[1] = firstY + yIncrement;
+			
+			while (currentMove[0] != lastX || currentMove[1] != lastY) {
+				
+				boolean belongsToGroup = false;
+				
+				for (Cell cell : cellList) {
+					if (currentMove[0] == cell.getX() && currentMove[1] == cell.getY()) {
+						belongsToGroup = true;
+						break;
+					}
+				}
+				
+				if (!belongsToGroup) {
+					int[] threatMove = new int[2];
+					threatMove[0] = currentMove[0];
+					threatMove[1] = currentMove[1];
+					threatMoves.add(threatMove);
+				}
+				
+				currentMove[0] += xIncrement;
+				currentMove[1] += yIncrement;
+			}
+		}
+
+		
+		// outside moves
+		if (length == 4) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+			}
+			
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+			}
+		} else if (length == 3) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearBefore > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] - xIncrement;
+					threatMove2[1] = threatMove1[1] - yIncrement;
+					threatMoves.add(threatMove2);
+				}
+			}
+			
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearAfter > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] + xIncrement;
+					threatMove2[1] = threatMove1[1] + yIncrement;
+					threatMoves.add(threatMove2);
+				}
+			}
+		} else if (length == 2) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearBefore > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] - xIncrement;
+					threatMove2[1] = threatMove1[1] - yIncrement;
+					threatMoves.add(threatMove2);
+					
+					if (clearBefore > 2) {
+						int[] threatMove3 = new int[2];
+						threatMove3[0] = threatMove2[0] - xIncrement;
+						threatMove3[1] = threatMove2[1] - yIncrement;
+						threatMoves.add(threatMove3);
+					}
+				}
+			}
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearAfter > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] + xIncrement;
+					threatMove2[1] = threatMove1[1] + yIncrement;
+					threatMoves.add(threatMove2);
+					
+					if (clearAfter > 2) {
+						int[] threatMove3 = new int[2];
+						threatMove3[0] = threatMove2[0] + xIncrement;
+						threatMove3[1] = threatMove2[1] + yIncrement;
+						threatMoves.add(threatMove3);
+					}
+				}
+			}
+		} else if (length == 1) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearBefore > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] - xIncrement;
+					threatMove2[1] = threatMove1[1] - yIncrement;
+					threatMoves.add(threatMove2);
+					
+					if (clearBefore > 2) {
+						int[] threatMove3 = new int[2];
+						threatMove3[0] = threatMove2[0] - xIncrement;
+						threatMove3[1] = threatMove2[1] - yIncrement;
+						threatMoves.add(threatMove3);
+						
+						if (clearBefore > 3) {
+							int[] threatMove4 = new int[2];
+							threatMove4[0] = threatMove3[0] - xIncrement;
+							threatMove4[1] = threatMove3[1] - yIncrement;
+							threatMoves.add(threatMove4);
+						}
+					}
+				}
+			}
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearAfter > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] + xIncrement;
+					threatMove2[1] = threatMove1[1] + yIncrement;
+					threatMoves.add(threatMove2);
+					
+					if (clearAfter > 2) {
+						int[] threatMove3 = new int[2];
+						threatMove3[0] = threatMove2[0] + xIncrement;
+						threatMove3[1] = threatMove2[1] + yIncrement;
+						threatMoves.add(threatMove3);
+						
+						if (clearAfter > 3) {
+							int[] threatMove4 = new int[2];
+							threatMove4[0] = threatMove3[0] + xIncrement;
+							threatMove4[1] = threatMove3[1] + yIncrement;
+							threatMoves.add(threatMove4);
+						}
+					}
+				}
+			}
+		} 
+		
+		return threatMoves;
+	}
+	
+	
+	public List<int[]> getDoubleThreatMoves(int number) {
+		
+		List<int[]> threatMoves = new ArrayList<int[]>();
+		
+		// if the size is not compatible
+		if (cellList.size() != number) {
+			return threatMoves;
+		}
+		
+		if (length == 5) {
+			return threatMoves;
+		}
+		
+		// if there is not enough space
+		if (clearBefore == 0 || clearAfter == 0 || length + clearBefore + clearAfter < 6) {
+			return threatMoves;
+		}
+		
+		Cell firstCell = cellList.get(0);
+		Cell lastCell = cellList.get(cellList.size() - 1);
+		
+		int firstX = firstCell.getX();
+		int firstY = firstCell.getY();
+		
+		int lastX = lastCell.getX();
+		int lastY = lastCell.getY();
+		
+		
+		int xIncrement = 0;
+		int yIncrement = 0;
+		
+		if (direction == GomokuEngine.HORIZONTAL) {
+			xIncrement = 1;
+		} else if (direction == GomokuEngine.VERTICAL) {
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL1) {
+			xIncrement = 1;
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL2) {
+			xIncrement = 1;
+			yIncrement = -1;
+		}
+		
+		// in-between moves
+		if (number > 1) {
+			int[] currentMove = new int[2];
+			currentMove[0] = firstX + xIncrement;
+			currentMove[1] = firstY + yIncrement;
+			
+			while (currentMove[0] != lastX || currentMove[1] != lastY) {
+				
+				boolean belongsToGroup = false;
+				
+				for (Cell cell : cellList) {
+					if (currentMove[0] == cell.getX() && currentMove[1] == cell.getY()) {
+						belongsToGroup = true;
+						break;
+					}
+				}
+				
+				if (!belongsToGroup) {
+					int[] threatMove = new int[2];
+					threatMove[0] = currentMove[0];
+					threatMove[1] = currentMove[1];
+					threatMoves.add(threatMove);
+				}
+				
+				currentMove[0] += xIncrement;
+				currentMove[1] += yIncrement;
+			}
+		}
+		
+		// outside moves
+		if (length == 3) {
+			if (clearAfter > 1) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+			}
+
+			if (clearBefore > 1) {
+				int[] threatMove2 = new int[2];
+				threatMove2[0] = firstX - xIncrement;
+				threatMove2[1] = firstY - yIncrement;
+				threatMoves.add(threatMove2);
+			}
+
+		} else if (length == 2) {
+			
+			if (clearAfter > 1) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				if (clearAfter > 2) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] + xIncrement;
+					threatMove2[1] = threatMove1[1] + yIncrement;
+					threatMoves.add(threatMove2);
+				}
+			}
+			
+			if (clearBefore > 1) {
+				int[] threatMove3 = new int[2];
+				threatMove3[0] = firstX - xIncrement;
+				threatMove3[1] = firstY - yIncrement;
+				threatMoves.add(threatMove3);
+				if (clearBefore > 2) {
+					int[] threatMove4 = new int[2];
+					threatMove4[0] = threatMove3[0] - xIncrement;
+					threatMove4[1] = threatMove3[1] - yIncrement;
+					threatMoves.add(threatMove4);
+				}
+			}
+			
+		} else if (length == 1) {
+			
+			if (clearBefore > 1) {
+				int[] threatMove3 = new int[2];
+				threatMove3[0] = firstX - xIncrement;
+				threatMove3[1] = firstY - yIncrement;
+				threatMoves.add(threatMove3);
+				if (clearBefore > 2) {
+					int[] threatMove4 = new int[2];
+					threatMove4[0] = threatMove3[0] - xIncrement;
+					threatMove4[1] = threatMove3[1] - yIncrement;
+					threatMoves.add(threatMove4);
+					if (clearBefore > 3) {
+						int[] threatMove5 = new int[2];
+						threatMove5[0] = threatMove4[0] - xIncrement;
+						threatMove5[1] = threatMove4[1] - yIncrement;
+						threatMoves.add(threatMove5);
+					}
+				}
+			}
+			
+			if (clearAfter > 1) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				if (clearAfter > 2) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] + xIncrement;
+					threatMove2[1] = threatMove1[1] + yIncrement;
+					threatMoves.add(threatMove2);
+					if (clearAfter > 3) {
+						int[] threatMove3 = new int[2];
+						threatMove3[0] = threatMove2[0] + xIncrement;
+						threatMove3[1] = threatMove2[1] + yIncrement;
+						threatMoves.add(threatMove3);
+					}
+				}
+			}
+		}
+		
+		return threatMoves;
+	}
+
+	
+	// for 4-size groups only
+	public List<int[]> getThreat5Moves() {
+		
+		List<int[]> threatMoves = new ArrayList<int[]>();
+		
+		if (cellList.size() < 4) {
+			return threatMoves;
+		}
+		
+		if (length + clearBefore + clearAfter < 5) {
+			return threatMoves;
+		}
+		
+		Cell firstCell = cellList.get(0);
+		Cell lastCell = cellList.get(cellList.size() - 1);
+		
+		int firstX = firstCell.getX();
+		int firstY = firstCell.getY();
+		
+		int lastX = lastCell.getX();
+		int lastY = lastCell.getY();
+		
+		
+		int xIncrement = 0;
+		int yIncrement = 0;
+		
+		if (direction == GomokuEngine.HORIZONTAL) {
+			xIncrement = 1;
+		} else if (direction == GomokuEngine.VERTICAL) {
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL1) {
+			xIncrement = 1;
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL2) {
+			xIncrement = 1;
+			yIncrement = -1;
+		}
+		
+		// in-between moves
+		int[] currentMove = new int[2];
+		currentMove[0] = firstX + xIncrement;
+		currentMove[1] = firstY + yIncrement;
+		
+		while (currentMove[0] != lastX || currentMove[1] != lastY) {
+			
+			boolean belongsToGroup = false;
+			
+			for (Cell cell : cellList) {
+				if (currentMove[0] == cell.getX() && currentMove[1] == cell.getY()) {
+					belongsToGroup = true;
+					break;
+				}
+			}
+			
+			if (!belongsToGroup) {
+				int[] threatMove = new int[2];
+				threatMove[0] = currentMove[0];
+				threatMove[1] = currentMove[1];
+				threatMoves.add(threatMove);
+			}
+			
+			currentMove[0] += xIncrement;
+			currentMove[1] += yIncrement;
+		}
+		
+		// outside moves
+		if (length == 4) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+			}
+			
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+			}
+		}
+		
+		return threatMoves;
+	}
+
+	// for 3-size groups only
+	public List<int[]> getThreat4Moves() {
+		
+		List<int[]> threatMoves = new ArrayList<int[]>();
+		
+		if (length + clearBefore + clearAfter < 5) {
+			return threatMoves;
+		}
+		
+		Cell firstCell = cellList.get(0);
+		Cell lastCell = cellList.get(cellList.size() - 1);
+		
+		int firstX = firstCell.getX();
+		int firstY = firstCell.getY();
+		
+		int lastX = lastCell.getX();
+		int lastY = lastCell.getY();
+		
+		
+		int xIncrement = 0;
+		int yIncrement = 0;
+		
+		if (direction == GomokuEngine.HORIZONTAL) {
+			xIncrement = 1;
+		} else if (direction == GomokuEngine.VERTICAL) {
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL1) {
+			xIncrement = 1;
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL2) {
+			xIncrement = 1;
+			yIncrement = -1;
+		}
+		
+		// in-between moves
+		int[] currentMove = new int[2];
+		currentMove[0] = firstX + xIncrement;
+		currentMove[1] = firstY + yIncrement;
+		
+		while (currentMove[0] != lastX || currentMove[1] != lastY) {
+			
+			boolean belongsToGroup = false;
+			
+			for (Cell cell : cellList) {
+				if (currentMove[0] == cell.getX() && currentMove[1] == cell.getY()) {
+					belongsToGroup = true;
+					break;
+				}
+			}
+			
+			if (!belongsToGroup) {
+				int[] threatMove = new int[2];
+				threatMove[0] = currentMove[0];
+				threatMove[1] = currentMove[1];
+				threatMoves.add(threatMove);
+			}
+			
+			currentMove[0] += xIncrement;
+			currentMove[1] += yIncrement;
+		}
+		
+		// outside moves
+		if (length == 3) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearBefore > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] - xIncrement;
+					threatMove2[1] = threatMove1[1] - yIncrement;
+					threatMoves.add(threatMove2);
+				}
+			}
+			
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				
+				if (clearAfter > 1) {
+					int[] threatMove2 = new int[2];
+					threatMove2[0] = threatMove1[0] + xIncrement;
+					threatMove2[1] = threatMove1[1] + yIncrement;
+					threatMoves.add(threatMove2);
+				}
+			}
+		} else if (length == 4) {
+			if (clearBefore > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+			}
+			if (clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+			}
+		}
+		
+		return threatMoves;
+	}
+	
+	// for 2-size groups only
+	public List<int[]> getThreat3Moves() {
+		
+		List<int[]> threatMoves = new ArrayList<int[]>();
+		
+		if (length + clearBefore + clearAfter < 5) {
+			return threatMoves;
+		}
+		
+		if (length == 5) {
+			return threatMoves;
+		}
+		
+		Cell firstCell = cellList.get(0);
+		Cell lastCell = cellList.get(cellList.size() - 1);
+		
+		int firstX = firstCell.getX();
+		int firstY = firstCell.getY();
+		
+		int lastX = lastCell.getX();
+		int lastY = lastCell.getY();
+		
+		
+		int xIncrement = 0;
+		int yIncrement = 0;
+		
+		if (direction == GomokuEngine.HORIZONTAL) {
+			xIncrement = 1;
+		} else if (direction == GomokuEngine.VERTICAL) {
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL1) {
+			xIncrement = 1;
+			yIncrement = 1;
+		} else if (direction == GomokuEngine.DIAGONAL2) {
+			xIncrement = 1;
+			yIncrement = -1;
+		}
+		
+		// in-between moves
+		int[] currentMove = new int[2];
+		currentMove[0] = firstX + xIncrement;
+		currentMove[1] = firstY + yIncrement;
+		
+		while (currentMove[0] != lastX || currentMove[1] != lastY) {
+			
+			boolean belongsToGroup = false;
+			
+			for (Cell cell : cellList) {
+				if (currentMove[0] == cell.getX() && currentMove[1] == cell.getY()) {
+					belongsToGroup = true;
+					break;
+				}
+			}
+			
+			if (!belongsToGroup) {
+				int[] threatMove = new int[2];
+				threatMove[0] = currentMove[0];
+				threatMove[1] = currentMove[1];
+				threatMoves.add(threatMove);
+			}
+			
+			currentMove[0] += xIncrement;
+			currentMove[1] += yIncrement;
+		}
+		
+		// outside moves
+		if (length == 2) {
+			if (clearBefore > 0 && clearAfter > 2) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+				
+				int[] threatMove2 = new int[2];
+				threatMove2[0] = threatMove1[0] + xIncrement;
+				threatMove2[1] = threatMove1[1] + yIncrement;
+				threatMoves.add(threatMove2);
+			}
+			if (clearBefore > 2 && clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+				
+				int[] threatMove2 = new int[2];
+				threatMove2[0] = threatMove1[0] - xIncrement;
+				threatMove2[1] = threatMove1[1] - yIncrement;
+				threatMoves.add(threatMove2);
+			}
+			
+		} else if (length == 3) {
+			if (clearBefore > 0 && clearAfter > 1) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = lastX + xIncrement;
+				threatMove1[1] = lastY + yIncrement;
+				threatMoves.add(threatMove1);
+			}
+			
+			if (clearBefore > 1 && clearAfter > 0) {
+				int[] threatMove1 = new int[2];
+				threatMove1[0] = firstX - xIncrement;
+				threatMove1[1] = firstY - yIncrement;
+				threatMoves.add(threatMove1);
+			}
+		}
+		
+		return threatMoves;
+	}
+	
+	public int getLength() {
+		return length;
+	}
+	
+	public int getDirection() {
+		return direction;
+	}
+
+	public boolean containsAll(CellGroup cellGroup) {
+		
+		if (cellGroup.getDirection() != getDirection()) {
+			return false;
+		}
+		
+		for (Cell cell : cellGroup.getCellList()) {
+			if (!getCellList().contains(cell)) {
+				return false;
+			}
+		}
+			
+		return true;
+	}
 }
