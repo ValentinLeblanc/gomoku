@@ -5,11 +5,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.UIManager;
 
 import model.GomokuModel;
@@ -21,8 +24,8 @@ public class GomokuMainBoard extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static final int DEFAULT_ROW_COUNT = 13;
-	private static final int DEFAULT_COLUMN_COUNT = 13;
+	private static final int DEFAULT_ROW_COUNT = 15;
+	private static final int DEFAULT_COLUMN_COUNT = 15;
 
 	private int columnCount = DEFAULT_COLUMN_COUNT;
 	private int rowCount = DEFAULT_ROW_COUNT;
@@ -37,6 +40,11 @@ public class GomokuMainBoard extends JFrame {
 	private JButton undoButton;
 	private JButton redoButton;
 	private JButton computeMoveButton;
+	private JButton stopButton;
+	private JCheckBox displayAnalysedMovesCheckBox;
+	private JCheckBox displayThreatEvaluationCheckBox;
+	private JRadioButton whiteThreatEvaluationButton;
+	private JRadioButton blackThreatEvaluationButton;
 	
 	private JLabel globalEvaluationLabel;
 	private JLabel blackEvaluationLabel;
@@ -89,6 +97,7 @@ public class GomokuMainBoard extends JFrame {
 		
 		if (rule == HUMAN_VS_COMPUTER || rule == COMPUTER_VS_COMPUTER) {
 			getComputeMoveButton().setEnabled(false);
+			getStopButton().setEnabled(true);
 		}
 		
 		if (rule == COMPUTER_VS_COMPUTER) {
@@ -128,7 +137,32 @@ public class GomokuMainBoard extends JFrame {
 			buttonsPanel.add(getUndoButton());
 			buttonsPanel.add(getRedoButton());
 			buttonsPanel.add(getComputeMoveButton());
+			buttonsPanel.add(getStopButton());
+			buttonsPanel.add(getDisplayCheckBox());
+
+			JPanel displayThreatEvaluationPanel = new JPanel(new GridBagLayout());
 			
+			ButtonGroup buttonGroup = new ButtonGroup();
+			
+			buttonGroup.add(getBlackThreatEvaluationButton());
+			buttonGroup.add(getWhiteThreatEvaluationButton());
+			
+			GridBagConstraints constraints2 = new GridBagConstraints();
+			
+			constraints2.gridx = 0;
+			constraints2.gridy = 0;
+			constraints2.gridwidth = 2;
+			displayThreatEvaluationPanel.add(getDisplayDisplayThreatEvaluationCheckBox(), constraints2);
+			
+			constraints2.gridy++;
+			constraints2.gridwidth = 1;
+			displayThreatEvaluationPanel.add(getBlackThreatEvaluationButton(), constraints2);
+			
+			constraints2.gridx++;
+			displayThreatEvaluationPanel.add(getWhiteThreatEvaluationButton(), constraints2);
+			
+			buttonsPanel.add(displayThreatEvaluationPanel);
+
 			analysisPanel.add(new JLabel("Global evaluation : "), constraints);
 			constraints.gridx++;
 			analysisPanel.add(getGlobalEvaluationLabel(), constraints);
@@ -197,9 +231,48 @@ public class GomokuMainBoard extends JFrame {
 	
 	public JButton getComputeMoveButton() {
 		if (computeMoveButton == null) {
-			computeMoveButton = new JButton("Compute next move");
+			computeMoveButton = new JButton("Start computing");
 		}
 		return computeMoveButton;
+	}
+	
+	public JButton getStopButton() {
+		if (stopButton == null) {
+			stopButton = new JButton("Stop computing");
+			stopButton.setEnabled(false);
+		}
+		return stopButton;
+	}
+	
+	public JCheckBox getDisplayCheckBox() {
+		if (displayAnalysedMovesCheckBox == null) {
+			displayAnalysedMovesCheckBox = new JCheckBox("Display analysis");
+		}
+		return displayAnalysedMovesCheckBox;
+	}
+	
+	public JCheckBox getDisplayDisplayThreatEvaluationCheckBox() {
+		if (displayThreatEvaluationCheckBox == null) {
+			displayThreatEvaluationCheckBox = new JCheckBox("Display threat evaluation");
+		}
+		return displayThreatEvaluationCheckBox;
+	}
+	
+	public JRadioButton getBlackThreatEvaluationButton() {
+		if (blackThreatEvaluationButton == null) {
+			blackThreatEvaluationButton = new JRadioButton("Black");
+			blackThreatEvaluationButton.setSelected(true);
+			blackThreatEvaluationButton.setEnabled(false);
+		}
+		return blackThreatEvaluationButton;
+	}
+	
+	public JRadioButton getWhiteThreatEvaluationButton() {
+		if (whiteThreatEvaluationButton == null) {
+			whiteThreatEvaluationButton = new JRadioButton("White");
+			whiteThreatEvaluationButton.setEnabled(false);
+		}
+		return whiteThreatEvaluationButton;
 	}
 	
 	public int getColumnCount() {

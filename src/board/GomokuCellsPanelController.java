@@ -21,14 +21,16 @@ public class GomokuCellsPanelController {
 	private int[][] winData;
 
 	private int currentPlayingColor = GomokuModel.BLACK;
+	private int currentAnalysedColor = currentPlayingColor;
 
 	private boolean humanVscomputer = false;
 	private boolean computerVscomputer = false;
 	private boolean computerTurn = false;
-	private boolean isUndoing = false;
-	private GomokuCell analyzedCell;
-	private GomokuCell secondAnalyzedCell;
+	private boolean isInterrupted = false;
 	private GomokuCell lastMoveCell;
+	private GomokuCell lastAnalysedCell;
+	private boolean threatEvaluation;
+	private int threatEvaluationColor = GomokuModel.BLACK;
 	
 	public GomokuCellsPanelController(GomokuCellsPanel panel, GomokuModel model) {
 		this.panel = panel;
@@ -64,11 +66,15 @@ public class GomokuCellsPanelController {
 						handleMoveUpdate(moveData);
 						if (humanVscomputer) {
 							computerTurn = !computerTurn;
-							if (computerTurn && !isUndoing) {
+							if (computerTurn && !isInterrupted) {
 								requestEngineMove();
 							}
-						} else if (computerVscomputer && winData == null && !isUndoing) {
+						} else if (computerVscomputer && winData == null && !isInterrupted) {
 							requestEngineMove();
+						}
+						
+						if (threatEvaluation) {
+							requestEngineThreatEvaluation(threatEvaluationColor);
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {
 						GomokuCellsPanelController.this.winData = (int[][]) evt.getNewValue();
@@ -77,12 +83,15 @@ public class GomokuCellsPanelController {
 						handleResetUpdate();
 					} else if (evt.getPropertyName().equals(GomokuModel.ANALYSED_MOVE)) {
 						handleAnalysedMoveUpdate((int[]) evt.getNewValue());
-					} else if (evt.getPropertyName().equals(GomokuModel.SECOND_ANALYSED_MOVE)) {
-						handleSecondAnalysedMoveUpdate((int[]) evt.getNewValue());
+					} else if (evt.getPropertyName().equals(GomokuModel.ANALYSED_DONE)) {
+						handleAnalysedDoneUpdate((int[]) evt.getNewValue());
 					} else if (evt.getPropertyName().equals(GomokuModel.LAST_MOVE)) {
 						handleLastMoveUpdate((MoveData) evt.getNewValue());
+					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_THREAT_EVALUATION_UPDATE)) {
+						handleThreatEvaluationUpdate((int[]) evt.getNewValue());
 					}
 				}
+
 			};
 
 		}
@@ -110,7 +119,8 @@ public class GomokuCellsPanelController {
 			break;
 		}
 		
-		currentPlayingColor = currentPlayingColor == GomokuModel.BLACK ? GomokuModel.WHITE : GomokuModel.BLACK;
+		currentPlayingColor = -currentPlayingColor;
+		currentAnalysedColor = currentPlayingColor;
 	}
 	
 	private void handleWinUpdate() {
@@ -121,54 +131,52 @@ public class GomokuCellsPanelController {
 		
 		winData = null;
 		currentPlayingColor = GomokuModel.BLACK;
-
+		currentAnalysedColor = currentPlayingColor;
+		
 		for (Component c : panel.getComponents()) {
 			if (c instanceof GomokuCell) {
 				GomokuCell gomokuCell = (GomokuCell) c;
 				paintGomokuCell(gomokuCell, null);
 			}
 		}
+		
+		clearAllThreatEvaluation();
+
 		panel.repaint();
 	}
 	
 	private void handleAnalysedMoveUpdate(int[] analysedMove) {
 		
-		if (analyzedCell != null) {
-			analyzedCell.setAnalysed(false);
-			analyzedCell.setCircleColor(null);
+		GomokuCell gomokuCell = (GomokuCell) panel.getComponent(analysedMove[1] * panel.getColumnCount() + analysedMove[0]);
+		
+		Color color = currentAnalysedColor == GomokuModel.BLACK ? Color.BLACK : Color.WHITE;
+		gomokuCell.setAnalysedColor(color);
+		gomokuCell.setLastAnalysed(true);
+		
+		if (lastAnalysedCell != null) {
+			lastAnalysedCell.setLastAnalysed(false);
 		}
 		
-		if (analysedMove != null) {
-			GomokuCell gomokuCell = (GomokuCell) panel.getComponent(analysedMove[1] * panel.getColumnCount() + analysedMove[0]);
-			
-			analyzedCell = gomokuCell;
-			
-			Color color = currentPlayingColor == GomokuModel.BLACK ? Color.BLACK : Color.WHITE;
-			analyzedCell.setCircleColor(color);
-			analyzedCell.setAnalysed(true);
-		}
+		lastAnalysedCell = gomokuCell;
 		
+		currentAnalysedColor = -currentAnalysedColor;
 		
 		panel.repaint();
 	}
 	
-	private void handleSecondAnalysedMoveUpdate(int[] secondAnalysedMove) {
+	private void handleAnalysedDoneUpdate(int[] analysedMove) {
 		
-		if (secondAnalyzedCell != null) {
-			secondAnalyzedCell.setSecondAnalysed(false);
-			secondAnalyzedCell.setCircleColor(null);
-		}
-		
-		if (secondAnalysedMove != null) {
-			GomokuCell gomokuCell = (GomokuCell) panel.getComponent(secondAnalysedMove[1] * panel.getColumnCount() + secondAnalysedMove[0]);
+		if (analysedMove != null) {
+			GomokuCell gomokuCell = (GomokuCell) panel.getComponent(analysedMove[1] * panel.getColumnCount() + analysedMove[0]);
 			
-			secondAnalyzedCell = gomokuCell;
+			if (gomokuCell.getAnalysedColor() != null) {
+				gomokuCell.setAnalysedColor(null);
+			}
 			
-			Color color = currentPlayingColor == GomokuModel.BLACK ? Color.WHITE : Color.BLACK;
-			secondAnalyzedCell.setCircleColor(color);
-			secondAnalyzedCell.setSecondAnalysed(true);
+			if (lastAnalysedCell != null) {
+				lastAnalysedCell.setLastAnalysed(false);
+			}
 		}
-		
 		
 		panel.repaint();
 	}
@@ -190,10 +198,54 @@ public class GomokuCellsPanelController {
 		panel.repaint();
 	}
 	
+	private void handleThreatEvaluationUpdate(int[] threatData) {
+		
+		GomokuCell gomokuCell = (GomokuCell) panel.getComponent(threatData[1] * panel.getColumnCount() + threatData[0]);
+
+		gomokuCell.setThreatEvaluation(threatData[2]);
+		
+		gomokuCell.repaint();
+		
+		panel.repaint();
+	}
+	
 	public void requestEngineMove() {
 		gomokuModel.firePropertyChange(GomokuModel.ENGINE_MOVE_REQUEST, currentPlayingColor);
 	}
 	
+	public void requestEngineStop() {
+		gomokuModel.firePropertyChange(GomokuModel.ENGINE_STOP_REQUEST);
+		for (int i = 0; i < gomokuModel.getData()[0].length; i++) {
+			for (int j = 0; j < gomokuModel.getData().length; j++) {
+				int[] move = new int[2];
+				move[0] = j;
+				move[1] = i;
+				handleAnalysedDoneUpdate(move);
+			}
+		}
+		
+		if (lastAnalysedCell != null) {
+			lastAnalysedCell.setLastAnalysed(false);
+			lastAnalysedCell = null;
+		}
+		
+	}
+	
+	private void requestEngineThreatEvaluation(int playingColor) {
+		clearAllThreatEvaluation();
+		gomokuModel.firePropertyChange(GomokuModel.ENGINE_THREAT_EVALUATION_REQUEST, playingColor);
+	}
+
+	private void clearAllThreatEvaluation() {
+		for (int i = 0; i < gomokuModel.getData()[0].length; i++) {
+			for (int j = 0; j < gomokuModel.getData().length; j++) {
+				GomokuCell gomokuCell = (GomokuCell) panel.getComponent(i * panel.getColumnCount() + j);
+				gomokuCell.setThreatEvaluation(0);
+				gomokuCell.repaint();
+			}
+		}
+	}
+
 	public void paintGomokuCell(GomokuCell gomokuCell, Color color) {
 		gomokuCell.setCircleColor(color);
 		gomokuCell.repaint();
@@ -235,11 +287,44 @@ public class GomokuCellsPanelController {
 	}
 
 	public boolean isUndoing() {
-		return isUndoing;
+		return isInterrupted;
 	}
 
-	public void setUndoing(boolean isUndoing) {
-		this.isUndoing = isUndoing;
+	public void setInterruptComputation(boolean isUndoing) {
+		this.isInterrupted = isUndoing;
+	}
+
+	public void setDisplayAnalysis(boolean display) {
+		for (int i = 0; i < gomokuModel.getData()[0].length; i++) {
+			for (int j = 0; j < gomokuModel.getData().length; j++) {
+				int[] cell = new int[2];
+				cell[0] = j;
+				cell[1] = i;
+				
+				GomokuCell gomokuCell = (GomokuCell) panel.getComponent(cell[1] * panel.getColumnCount() + cell[0]);
+				
+				gomokuCell.setDisplayAnalysis(display);
+			}
+		}
+	}
+
+	public void setThreatEvaluation(boolean threatEvaluation) {
+		
+		this.threatEvaluation = threatEvaluation; 
+		
+		if (threatEvaluation) {
+			requestEngineThreatEvaluation(threatEvaluationColor);
+		} else {
+			clearAllThreatEvaluation();
+		}
+		
+		panel.repaint();
+		
+	}
+
+	public void setThreatEvaluationColor(int threatEvaluationColor) {
+		this.threatEvaluationColor = threatEvaluationColor ;
+		requestEngineThreatEvaluation(threatEvaluationColor);
 	}
 	
 }

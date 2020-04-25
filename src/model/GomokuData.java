@@ -28,7 +28,7 @@ public class GomokuData {
 		
 	};
 	
-	public GomokuData(int[][] data) {
+	public GomokuData(int[][] data, int playingColor) throws Exception {
 		
 		this.columnCount = data.length;
 		this.rowCount = data[0].length;
@@ -45,23 +45,19 @@ public class GomokuData {
 				cellMap.get(j).put(i, newCell);
 			}
 		}
+		
+		computeCellGroups(playingColor);
 	}
 	
 	public Cell get(int j, int i) {
 		return cellMap.get(j).get(i);
 	}
 	
-	public void put(int j, int i, int value) {
-		cellMap.get(j).get(i).setValue(value);
-		data[j][i] = value;
-		computeCellGroups(value);
-	}
-	
 	public List<CellGroup> getCellGroups() {
 		return cellGroups;
 	}
 
-	public void computeCellGroups(int playingColor) {
+	public void computeCellGroups(int playingColor) throws Exception {
 		
 		cellGroups = new ArrayList<CellGroup>();
 		
@@ -117,8 +113,8 @@ public class GomokuData {
 		}
 
 		for (int row = rowCount - 2; row >= 0; row--) {
-			int[][] diagonal2Stripe = new int[row][2];
-			for (int col = 0; col < row; col++) {
+			int[][] diagonal2Stripe = new int[row + 1][2];
+			for (int col = 0; col <= row; col++) {
 				diagonal2Stripe[col][0] = col;
 				diagonal2Stripe[col][1] = row - col;
 			}
@@ -146,18 +142,22 @@ public class GomokuData {
 		cellGroups.removeAll(toRemoveList);
 	}
 
-	private void computeCellGroups(int[][] stripe, int direction, int playingColor) {
+	private void computeCellGroups(int[][] stripe, int direction, int playingColor) throws Exception {
 
+		if (Thread.interrupted()) {
+			throw new Exception();
+		}
+		
 		CellGroup currentCellGroup = null;
 		int k = 0;
 		while (k < stripe.length - 4) {
 			for (int h = 0; h < 5; h++) {
-				if (data[stripe[k + h][0]][stripe[k + h][1]] == playingColor) {
+				if (getData()[stripe[k + h][0]][stripe[k + h][1]] == playingColor) {
 					if (currentCellGroup == null) {
-						currentCellGroup = new CellGroup(data, direction);
+						currentCellGroup = new CellGroup(getData(), direction);
 					}
 					currentCellGroup.addCell(get(stripe[k + h][0], stripe[k + h][1]));
-				} else if (data[stripe[k + h][0]][stripe[k + h][1]] == -playingColor) {
+				} else if (getData()[stripe[k + h][0]][stripe[k + h][1]] == -playingColor) {
 					break;
 				}
 			}
@@ -171,5 +171,9 @@ public class GomokuData {
 			k++;
 		}
 		
+	}
+
+	public int[][] getData() {
+		return data;
 	}
 }

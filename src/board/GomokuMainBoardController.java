@@ -20,6 +20,11 @@ public class GomokuMainBoardController {
 		gomokuBoard.getUndoButton().addActionListener(getActionListener());
 		gomokuBoard.getRedoButton().addActionListener(getActionListener());
 		gomokuBoard.getComputeMoveButton().addActionListener(getActionListener());
+		gomokuBoard.getStopButton().addActionListener(getActionListener());
+		gomokuBoard.getDisplayCheckBox().addActionListener(getActionListener());
+		gomokuBoard.getDisplayDisplayThreatEvaluationCheckBox().addActionListener(getActionListener());
+		gomokuBoard.getBlackThreatEvaluationButton().addActionListener(getActionListener());
+		gomokuBoard.getWhiteThreatEvaluationButton().addActionListener(getActionListener());
 		
 		gomokuBoard.getModel().addPropertyChangeListener(getPropetyChangeListener());
 	}
@@ -42,12 +47,22 @@ public class GomokuMainBoardController {
 							gomokuBoard.getUndoButton().setEnabled(true);
 							gomokuBoard.getRedoButton().setEnabled(true);
 							gomokuBoard.getComputeMoveButton().setEnabled(true);
+							gomokuBoard.getStopButton().setEnabled(false);
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_MOVE_REQUEST)) {
 						gomokuBoard.getResetButton().setEnabled(false);
 						gomokuBoard.getUndoButton().setEnabled(false);
 						gomokuBoard.getRedoButton().setEnabled(false);
 						gomokuBoard.getComputeMoveButton().setEnabled(false);
+						gomokuBoard.getStopButton().setEnabled(true);
+					} else if (evt.getPropertyName().equals(GomokuModel.INTERRUPTED)) {
+						if (!gomokuBoard.getGomokuCellsPanel().getController().isComputerVsComputer() || !gomokuBoard.getGomokuCellsPanel().getController().isHumanVsComputer()) {
+							gomokuBoard.getResetButton().setEnabled(true);
+							gomokuBoard.getUndoButton().setEnabled(true);
+							gomokuBoard.getRedoButton().setEnabled(true);
+							gomokuBoard.getComputeMoveButton().setEnabled(true);
+							gomokuBoard.getStopButton().setEnabled(false);
+						}
 					}
 				}
 			};
@@ -65,14 +80,30 @@ public class GomokuMainBoardController {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getSource() == gomokuBoard.getResetButton()) {
 						gomokuBoard.getModel().firePropertyChange(GomokuModel.RESET_REQUEST);
-					} else  if (e.getSource() == gomokuBoard.getUndoButton()) {
-						gomokuBoard.getGomokuCellsPanel().getController().setUndoing(true);
+					} else if (e.getSource() == gomokuBoard.getUndoButton()) {
+						gomokuBoard.getGomokuCellsPanel().getController().setInterruptComputation(true);
 						gomokuBoard.getModel().firePropertyChange(GomokuModel.UNDO_REQUEST);
-					} else  if (e.getSource() == gomokuBoard.getRedoButton()) {
+					} else if (e.getSource() == gomokuBoard.getRedoButton()) {
 						gomokuBoard.getModel().firePropertyChange(GomokuModel.REDO_REQUEST);
-					} else  if (e.getSource() == gomokuBoard.getComputeMoveButton()) {
-						gomokuBoard.getGomokuCellsPanel().getController().setUndoing(false);
+					} else if (e.getSource() == gomokuBoard.getComputeMoveButton()) {
+						gomokuBoard.getGomokuCellsPanel().getController().setInterruptComputation(false);
 						gomokuBoard.getGomokuCellsPanel().getController().requestEngineMove();
+					} else if (e.getSource() == gomokuBoard.getStopButton()) {
+						gomokuBoard.getGomokuCellsPanel().getController().requestEngineStop();
+						gomokuBoard.getGomokuCellsPanel().getController().setInterruptComputation(true);
+					} else if (e.getSource() == gomokuBoard.getDisplayCheckBox()) {
+						gomokuBoard.getGomokuCellsPanel().getController().setDisplayAnalysis(gomokuBoard.getDisplayCheckBox().isSelected());
+					} else if (e.getSource() == gomokuBoard.getDisplayDisplayThreatEvaluationCheckBox()) {
+						boolean selected = gomokuBoard.getDisplayDisplayThreatEvaluationCheckBox().isSelected();
+						gomokuBoard.getGomokuCellsPanel().getController().setThreatEvaluation(selected);
+						gomokuBoard.getBlackThreatEvaluationButton().setEnabled(selected);
+						gomokuBoard.getWhiteThreatEvaluationButton().setEnabled(selected);
+					} else if (e.getSource() == gomokuBoard.getBlackThreatEvaluationButton()) {
+						boolean selected = gomokuBoard.getBlackThreatEvaluationButton().isSelected();
+						gomokuBoard.getGomokuCellsPanel().getController().setThreatEvaluationColor(GomokuModel.BLACK);
+					} else if (e.getSource() == gomokuBoard.getWhiteThreatEvaluationButton()) {
+						boolean selected = gomokuBoard.getWhiteThreatEvaluationButton().isSelected();
+						gomokuBoard.getGomokuCellsPanel().getController().setThreatEvaluationColor(GomokuModel.WHITE);
 					}
 				}
 			};

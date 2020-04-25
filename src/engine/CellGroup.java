@@ -625,8 +625,19 @@ public class CellGroup {
 			}
 		}
 		
+		
 		// outside moves
-		if (length == 3) {
+		if (length == 4 && cellList.size() == 4) {
+			int[] threatMove1 = new int[2];
+			threatMove1[0] = lastX + xIncrement;
+			threatMove1[1] = lastY + yIncrement;
+			threatMoves.add(threatMove1);
+			
+			int[] threatMove2 = new int[2];
+			threatMove2[0] = firstX - xIncrement;
+			threatMove2[1] = firstY - yIncrement;
+			threatMoves.add(threatMove2);
+		} else if (length == 3) {
 			if (clearAfter > 1) {
 				int[] threatMove1 = new int[2];
 				threatMove1[0] = lastX + xIncrement;
@@ -1037,5 +1048,112 @@ public class CellGroup {
 		}
 			
 		return true;
+	}
+
+	public boolean hasDoubleThreatPotentialWith(int[] threat) {
+		
+		if (cellList.size() == 1 && hasEnoughSpace(true)) {
+			
+			int firstX = threat[0];
+			int firstY = threat[1];
+			int secondX = cellList.get(0).getX();
+			int secondY = cellList.get(0).getY();
+
+			if (direction == GomokuEngine.HORIZONTAL) {
+				if (firstY == secondY) {
+					if (firstX < secondX) {
+						return secondX - firstX <= 3 && secondX - firstX < clearBefore;
+					} else {
+						return firstX - secondX <= 3 && firstX - secondX < clearAfter;
+					}
+				}
+			} else if (direction == GomokuEngine.VERTICAL) {
+				if (firstX == secondX) {
+					if (firstY < secondY) {
+						return secondY - firstY <= 3 && secondY - firstY < clearBefore;
+					} else {
+						return firstY - secondY <= 3 && firstY - secondY < clearAfter;
+					}
+				}
+			} else if (direction == GomokuEngine.DIAGONAL1) {
+				if (firstX - secondX == firstY - secondY) {
+					if (firstX < secondX) {
+						return secondX - firstX <= 3 && secondX - firstX < clearBefore;
+					} else {
+						return firstX - secondX <= 3 && firstX - secondX < clearAfter;
+					}
+				}
+			} else if (direction == GomokuEngine.DIAGONAL2) {
+				if (firstX - secondX == secondY - firstY) {
+					if (firstX < secondX) {
+						return secondX - firstX <= 3 && secondX - firstX < clearBefore;
+					} else {
+						return firstX - secondX <= 3 && firstX - secondX < clearAfter;
+					}
+				}
+			}
+		} else if (cellList.size() == 2 && hasEnoughSpace(true)) {
+			
+			int firstX = threat[0];
+			int firstY = threat[1];
+			int secondX = cellList.get(0).getX();
+			int secondY = cellList.get(0).getY();
+			int thirdX = cellList.get(1).getX();
+			int thirdY = cellList.get(1).getY();
+			
+			if (direction == GomokuEngine.HORIZONTAL) {
+				if (firstY == secondY) {
+					if (Math.abs(firstX - secondX) <= 3) {
+						return true;
+					}
+					if (Math.abs(firstX - thirdX) <= 3) {
+						return true;
+					}
+				}
+			} else if (direction == GomokuEngine.VERTICAL) {
+				if (firstX == secondX) {
+					if (Math.abs(firstY - secondY) <= 3) {
+						return true;
+					}
+					if (Math.abs(firstY - thirdY) <= 3) {
+						return true;
+					}
+				}
+			} else if (direction == GomokuEngine.DIAGONAL1) {
+				if (firstX - secondX == firstY - secondY) {
+					if (Math.abs(firstX - secondX) <= 3) {
+						return true;
+					}
+					if (Math.abs(firstX - thirdX) <= 3) {
+						return true;
+					}
+				}
+			} else if (direction == GomokuEngine.DIAGONAL2) {
+				if (firstX - secondX == secondY - firstY) {
+					if (Math.abs(firstX - secondX) <= 3) {
+						return true;
+					}
+					if (Math.abs(firstX - thirdY) <= 3) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	public int[] isCrossing(CellGroup secondGroup) {
+		for (Cell cell1 : getCellList()) {
+			for (Cell cell2 : secondGroup.getCellList()) {
+				if (cell1.getX() == cell2.getX() && cell1.getY() == cell2.getY()) {
+					int[] cross = new int[2];
+					cross[0] = cell1.getX();
+					cross[1] = cell1.getY();
+					return cross;
+				}
+			}
+		}
+		return null;
 	}
 }
