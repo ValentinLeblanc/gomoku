@@ -125,19 +125,19 @@ public class GomokuData {
 		
 		cellGroups.sort(sizeComparator);
 		
-		for (int i = 0; i < cellGroups.size(); i++) {
-			for (int j = i + 1; j < cellGroups.size(); j++) {
-				if (cellGroups.get(j).containsAll(cellGroups.get(i))) {
-					toRemoveList.add(cellGroups.get(i));
-					
-					for (Cell cell : cellGroups.get(i).getCellList()) {
-						cell.getCellGroups().remove(cellGroups.get(i));
-					}
-					
-					break;
-				}
-			}
-		}
+//		for (int i = 0; i < cellGroups.size(); i++) {
+//			for (int j = i + 1; j < cellGroups.size(); j++) {
+//				if (cellGroups.get(j).containsAll(cellGroups.get(i))) {
+//					toRemoveList.add(cellGroups.get(i));
+//					
+//					for (Cell cell : cellGroups.get(i).getCellList()) {
+//						cell.getCellGroups().remove(cellGroups.get(i));
+//					}
+//					
+//					break;
+//				}
+//			}
+//		}
 		
 		cellGroups.removeAll(toRemoveList);
 	}
@@ -145,7 +145,7 @@ public class GomokuData {
 	private void computeCellGroups(int[][] stripe, int direction, int playingColor) throws Exception {
 
 		if (Thread.interrupted()) {
-			throw new Exception();
+			throw new InterruptedException();
 		}
 		
 		CellGroup currentCellGroup = null;
@@ -158,6 +158,7 @@ public class GomokuData {
 					}
 					currentCellGroup.addCell(get(stripe[k + h][0], stripe[k + h][1]));
 				} else if (getData()[stripe[k + h][0]][stripe[k + h][1]] == -playingColor) {
+					currentCellGroup = null;
 					break;
 				}
 			}

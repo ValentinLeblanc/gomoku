@@ -61,16 +61,6 @@ public class Cell {
 		return cellGroups;
 	}
 
-	public CellGroup getWinGroup() {
-		for (CellGroup cellGroup : getCellGroups()) {
-			if (cellGroup.isWinGroup()) {
-				return cellGroup;
-			}
-		}
-		
-		return null;
-	}
-
 	public int getSingleThreat5Potential() {
 		return singleThreat5Potential;
 	}

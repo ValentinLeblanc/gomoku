@@ -74,6 +74,11 @@ public class GomokuCellsPanelController {
 						}
 						
 						if (threatEvaluation) {
+							try {
+								Thread.sleep(10);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
 							requestEngineThreatEvaluation(threatEvaluationColor);
 						}
 					} else if (evt.getPropertyName().equals(GomokuModel.WIN_UPDATE)) {
@@ -88,7 +93,7 @@ public class GomokuCellsPanelController {
 					} else if (evt.getPropertyName().equals(GomokuModel.LAST_MOVE)) {
 						handleLastMoveUpdate((MoveData) evt.getNewValue());
 					} else if (evt.getPropertyName().equals(GomokuModel.ENGINE_THREAT_EVALUATION_UPDATE)) {
-						handleThreatEvaluationUpdate((int[]) evt.getNewValue());
+						handleThreatEvaluationUpdate((int[][][]) evt.getNewValue());
 					}
 				}
 
@@ -198,13 +203,23 @@ public class GomokuCellsPanelController {
 		panel.repaint();
 	}
 	
-	private void handleThreatEvaluationUpdate(int[] threatData) {
+	private void handleThreatEvaluationUpdate(int[][][] threatTable) {
 		
-		GomokuCell gomokuCell = (GomokuCell) panel.getComponent(threatData[1] * panel.getColumnCount() + threatData[0]);
-
-		gomokuCell.setThreatEvaluation(threatData[2]);
-		
-		gomokuCell.repaint();
+		for (int i = 0; i < threatTable[0].length; i++) {
+			for (int j = 0; j < threatTable[0].length; j++) {
+				GomokuCell gomokuCell = (GomokuCell) panel.getComponent(i * panel.getColumnCount() + j);
+				
+				if (threatTable[0][j][i] != 0) {
+					gomokuCell.setBlackThreatEvaluation(threatTable[0][j][i]);
+					gomokuCell.repaint();
+				} 
+				
+				if (threatTable[1][j][i] != 0) {
+					gomokuCell.setWhiteThreatEvaluation(threatTable[1][j][i]);
+					gomokuCell.repaint();
+				}
+			}
+		}
 		
 		panel.repaint();
 	}
@@ -240,7 +255,8 @@ public class GomokuCellsPanelController {
 		for (int i = 0; i < gomokuModel.getData()[0].length; i++) {
 			for (int j = 0; j < gomokuModel.getData().length; j++) {
 				GomokuCell gomokuCell = (GomokuCell) panel.getComponent(i * panel.getColumnCount() + j);
-				gomokuCell.setThreatEvaluation(0);
+				gomokuCell.setBlackThreatEvaluation(0);
+				gomokuCell.setWhiteThreatEvaluation(0);
 				gomokuCell.repaint();
 			}
 		}

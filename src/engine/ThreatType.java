@@ -1,0 +1,15 @@
+package engine;
+
+public enum ThreatType {
+
+	SINGLE_THREAT_5,
+	SINGLE_THREAT_4,
+	SINGLE_THREAT_3,
+	SINGLE_THREAT_2,
+	
+	DOUBLE_THREAT_5,
+	DOUBLE_THREAT_4,
+	DOUBLE_THREAT_3,
+	DOUBLE_THREAT_2,
+	
+}

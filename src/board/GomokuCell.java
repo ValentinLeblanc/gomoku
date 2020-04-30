@@ -5,10 +5,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.geom.Line2D;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
 
 public class GomokuCell extends JPanel {
 
@@ -30,10 +32,12 @@ public class GomokuCell extends JPanel {
 	private boolean displayAnalysis = false;
 	private boolean displayThreatEvaluation = true;
 	
-	private JLabel threatEvaluationLabel;
+	private JLabel blackThreatEvaluationLabel;
+	private JLabel whiteThreatEvaluationLabel;
 	
-	private int threatEvaluation = 0;
-	
+	private int blackThreatEvaluation = 0;
+	private int whiteThreatEvaluation = 0;
+
 	public static final int CELL_WIDTH = 50;
 	public static final int CELL_HEIGHT = 50;
 
@@ -47,14 +51,21 @@ public class GomokuCell extends JPanel {
 	}
 
 	private void initialize() {
+		setLayout(new GridLayout(2, 1));
 		setPreferredSize(new Dimension(CELL_WIDTH, CELL_HEIGHT));
 		setBackground(CELL_COLOR);
 		
-		threatEvaluationLabel = new JLabel("");
-		threatEvaluationLabel.setPreferredSize(new Dimension(50, 40));
-		threatEvaluationLabel.setHorizontalAlignment(JLabel.CENTER);
+		blackThreatEvaluationLabel = new JLabel("");
+		blackThreatEvaluationLabel.setPreferredSize(new Dimension(50, 40));
+		blackThreatEvaluationLabel.setHorizontalAlignment(JLabel.CENTER);
+		blackThreatEvaluationLabel.setForeground(Color.BLACK);
+		add(blackThreatEvaluationLabel);
 		
-		add(threatEvaluationLabel);
+		whiteThreatEvaluationLabel = new JLabel("");
+		whiteThreatEvaluationLabel.setPreferredSize(new Dimension(50, 40));
+		whiteThreatEvaluationLabel.setHorizontalAlignment(JLabel.CENTER);
+		whiteThreatEvaluationLabel.setForeground(Color.WHITE);
+		add(whiteThreatEvaluationLabel);
 	}
 
 	public int getRowIndex() {
@@ -98,32 +109,17 @@ public class GomokuCell extends JPanel {
 		}
 		
 		if (displayThreatEvaluation) {
-			if (threatEvaluation != 0) {
-				
-//				int colorValue = threatEvaluation == 1 ? Color.GREEN : threatEvaluation == 2 ? : Color.YELLOW : Color.ORANGE;
-				
-//				int redValue = colorValue * 255 / 1000;
-//				int greenValue = 255 - colorValue * 255 / 1000;
-				
-//				Color threatColor = new Color(redValue, greenValue, 0);
-				Color threatColor = Color.GREEN;
-				
-				if (threatEvaluation == 1) {
-					threatColor = Color.GREEN;
-				} else if (threatEvaluation == 2) {
-					threatColor = Color.YELLOW;
-				} else if (threatEvaluation >= 10) {
-					threatColor = new Color(255, 150, 0);
-				} else if (threatEvaluation >= 100) {
-					threatColor = Color.RED;
-				}
-				
-//				g.setColor(threatColor);
-//				g.fillOval(2 * CIRCLE_GAP, 2 * CIRCLE_GAP, CELL_WIDTH - 4 * CIRCLE_GAP - 1, CELL_HEIGHT - 4 * CIRCLE_GAP - 1);
-	           
-				threatEvaluationLabel.setText("" + threatEvaluation);
+			
+			if (blackThreatEvaluation != 0) {
+				blackThreatEvaluationLabel.setText("" + blackThreatEvaluation);
 			} else {
-				threatEvaluationLabel.setText("");
+				blackThreatEvaluationLabel.setText("");
+			}
+			
+			if (whiteThreatEvaluation != 0) {
+				whiteThreatEvaluationLabel.setText("" + whiteThreatEvaluation);
+			} else {
+				whiteThreatEvaluationLabel.setText("");
 			}
 		}
 	}
@@ -156,7 +152,11 @@ public class GomokuCell extends JPanel {
 		return displayAnalysis;
 	}
 
-	public void setThreatEvaluation(int threatEvaluation) {
-		this.threatEvaluation = threatEvaluation;
+	public void setBlackThreatEvaluation(int threatEvaluation) {
+		this.blackThreatEvaluation = threatEvaluation;
+	}
+	
+	public void setWhiteThreatEvaluation(int threatEvaluation) {
+		this.whiteThreatEvaluation = threatEvaluation;
 	}
 }

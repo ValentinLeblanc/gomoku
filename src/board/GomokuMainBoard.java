@@ -3,6 +3,8 @@ package board;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Toolkit;
 
 import javax.swing.ButtonGroup;
@@ -85,14 +87,67 @@ public class GomokuMainBoard extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		
 		GridBagConstraints constraints = new GridBagConstraints();
+		
+		constraints.insets = new Insets(2, 2, 2, 2);
 		constraints.gridx = 0;
 		constraints.gridy = 0;
+		constraints.fill = GridBagConstraints.BOTH;
+		
+		add(new JLabel(), constraints);
+		
+		constraints.gridx++;
+		JPanel topNumbersPanel = new JPanel(new GridLayout(1, columnCount));
+		for (int i = 0; i < columnCount; i++) {
+			JLabel numberLabel = new JLabel("" + (i));
+			numberLabel.setHorizontalAlignment(JLabel.CENTER);
+			topNumbersPanel.add(numberLabel);
+		}
+		
+		add(topNumbersPanel, constraints);
+
+		constraints.gridx = 0;
+		constraints.gridy++;
+		JPanel leftNumbersPanel = new JPanel(new GridLayout(rowCount, 1));
+		for (int i = 0; i < rowCount; i++) {
+			JLabel numberLabel = new JLabel("" + (i));
+			numberLabel.setHorizontalAlignment(JLabel.CENTER);
+			leftNumbersPanel.add(numberLabel);
+		}
+		
+		add(leftNumbersPanel, constraints);
+
+		constraints.gridx++;
 		add(getGomokuCellsPanel(), constraints);
 		getGomokuCellsPanel().getController().setHumanVsComputer(rule == HUMAN_VS_COMPUTER);
 		getGomokuCellsPanel().getController().setComputerVsComputer(rule == COMPUTER_VS_COMPUTER);
 		getGomokuCellsPanel().getController().setComputerTurn(computerTurn);
 		
+		constraints.gridy = 0;
+		
+		constraints.gridx++;
 		constraints.gridy++;
+		JPanel rightNumbersPanel = new JPanel(new GridLayout(rowCount, 1));
+		for (int i = 0; i < rowCount; i++) {
+			JLabel numberLabel = new JLabel("" + (i));
+			numberLabel.setHorizontalAlignment(JLabel.CENTER);
+			rightNumbersPanel.add(numberLabel);
+		}
+		add(rightNumbersPanel, constraints);
+		
+		constraints.gridy++;
+		constraints.gridy++;
+		constraints.gridx = 1;
+		JPanel buttomNumbersPanel = new JPanel(new GridLayout(1, columnCount));
+		for (int i = 0; i < columnCount; i++) {
+			JLabel numberLabel = new JLabel("" + (i));
+			numberLabel.setHorizontalAlignment(JLabel.CENTER);
+			buttomNumbersPanel.add(numberLabel);
+		}
+		
+		add(buttomNumbersPanel, constraints);
+
+		constraints.gridy++;
+
 		add(getAnalysisPanel(), constraints);
 		
 		if (rule == HUMAN_VS_COMPUTER || rule == COMPUTER_VS_COMPUTER) {

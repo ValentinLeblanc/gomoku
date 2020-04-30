@@ -135,9 +135,11 @@ public class GomokuModelController {
 					engineMove = engine.computeMove(model.getData(), playingColor);
 					MoveData newMove = new MoveData(engineMove[0], engineMove[1], playingColor);
 					handleMoveRequest(newMove);
-				} catch (Exception e) {
+				} catch (InterruptedException e) {
 					System.err.println("INTERRUPTED");
 					handleInterruption();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				
 			}
@@ -154,6 +156,9 @@ public class GomokuModelController {
 			public void run() {
 				try {
 					engine.computeThreatEvaluation(model.getData(), playingColor);
+				} catch (InterruptedException e) {
+					System.err.println("INTERRUPTED");
+					handleInterruption();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -164,10 +169,23 @@ public class GomokuModelController {
 	}
 
 	private void updateEvaluation() throws Exception {
-		getModel().setBlackEvaluation(engine.computeEvaluation(model.getData(), GomokuModel.BLACK));
-		getModel().firePropertyChange(GomokuModel.BLACK_EVALUATION_UPDATE);
-		getModel().setWhiteEvaluation(engine.computeEvaluation(model.getData(), GomokuModel.WHITE));
-		getModel().firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
+		engineThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					getModel().setBlackEvaluation(engine.computeEvaluation(model.getData()));
+					getModel().firePropertyChange(GomokuModel.BLACK_EVALUATION_UPDATE);
+//					getModel().setWhiteEvaluation(engine.computeEvaluation(model.getData(), GomokuModel.WHITE));
+//					getModel().firePropertyChange(GomokuModel.WHITE_EVALUATION_UPDATE);
+				} catch (InterruptedException e) {
+					System.err.println("INTERRUPTED");
+					handleInterruption();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		engineThread.start();
 	}
 	
 	public int[] getLastMove() {

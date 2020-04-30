@@ -1,5 +1,6 @@
 package engine;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -14,7 +15,7 @@ public class GomokuEngine {
 	public static final int DIAGONAL1 = 2;
 	public static final int DIAGONAL2 = 3;
 
-	public static final double OPPONENT_EVALUATION_FACTOR = 0.99;
+	public static final double OPPONENT_EVALUATION_FACTOR = 1;
 
 	private GomokuModel model;
 
@@ -24,15 +25,11 @@ public class GomokuEngine {
 	
 	private int maxDepthAllowed = 8;
 	
-	private static final int WIN_EVALUATION = 10000;
+	private static final int WIN_EVALUATION = 3200000;
 	private static final int DOUBLE_THREAT_5_EVALUATION = 1000;
 	private static final int DOUBLE_THREAT_4_EVALUATION = 100;
 	private static final int DOUBLE_THREAT_3_EVALUATION = 10;
 	private static final int DOUBLE_THREAT_2_EVALUATION = 1;
-	
-	private static final int STRIKE_POTENTIAL = 100;
-	private static final int SECONDARY_STRIKE_POTENTIAL = 10;
-	private static final int CONNECTION_POTENTIAL = 1;
 	
 	private Comparator<? super int[]> moveComparator = new Comparator<int[]>() {
 
@@ -71,11 +68,11 @@ public class GomokuEngine {
 				}
 			}
 			
-			int[] obviousMove = findObviousMove(dataCopy, playingColor);
-	
-			if (obviousMove != null) {
-				return obviousMove;
-			}
+//			int[] obviousMove = findObviousMove(dataCopy, playingColor);
+//	
+//			if (obviousMove != null) {
+//				return obviousMove;
+//			}
 	
 			List<int[]> analysedMoves = new ArrayList<int[]>();
 	
@@ -93,20 +90,27 @@ public class GomokuEngine {
 			analysedMoves.sort(moveComparator);
 	
 			System.out.println(color + "searching for MinMax...");
+			
+			int[] bestOpponentMove = new int[2];
 			long start = System.currentTimeMillis();
-			int[] minMax = findBestMoveAmongTheseMoves(dataCopy, playingColor, analysedMoves, true);
+			int[] minMax = findBestMoveAmongTheseMoves(dataCopy, playingColor, analysedMoves, true, bestOpponentMove);
 			long end = System.currentTimeMillis();
 			
 			System.out.println(color + "minMax found in " + (end - start) + " ms");
+			System.out.println("best opponent move : [" + bestOpponentMove[0] + "][" + bestOpponentMove[1] + "]");
 	
 			return minMax;
 		}
 
-	public double computeEvaluation(int[][] data, int playingColor) throws Exception {
+	public double computeEvaluation(int[][] data) throws Exception {
 
+		if (Thread.interrupted()) {
+			throw new InterruptedException();
+		}
+		
 		double eval = 0;
 
-		GomokuData gomokuData = new GomokuData(data, playingColor);
+//		GomokuData gomokuData = new GomokuData(data, playingColor);
 
 //		for (CellGroup cellGroup : gomokuData.getCellGroups()) {
 //			eval += cellGroup.computePotential();
@@ -115,16 +119,45 @@ public class GomokuEngine {
 //		eval += computeRealConnections(gomokuData, playingColor);
 //		eval += computePotentialConnections(gomokuData, playingColor);
 
-		int[] result = computeMaxThreatPotential(gomokuData, playingColor, false);
+//		int[] result = computeMaxThreatPotential(gomokuData, playingColor, false);
+//		eval = result[2];
 		
-		return result[2];
+//		StoneData stoneData = new StoneData(0, data, evaluatedColor);
+//		eval = stoneData.computeEvaluation(null);
+		
+		int stoneDifference = 0;
+		
+		for (int i = 0; i < data[0].length; i++) {
+			for (int j = 0; j < data.length; j++) {
+				stoneDifference += data[j][i];
+			}
+		}
+		
+		int playingColor = stoneDifference == 0 ? GomokuModel.BLACK : GomokuModel.WHITE;
+
+		EngineData engineData = new EngineData(data, playingColor);
+		eval = engineData.computeEvaluation(null);
+		
+		return eval;
 	}
 
-	public void computeThreatEvaluation(int[][] data, int playingColor) throws Exception {
+	public void computeThreatEvaluation(int[][] data, int evaluatedColor) throws Exception {
 		
-		GomokuData gomokuData = new GomokuData(data, playingColor);
+		int stoneDifference = 0;
 		
-		computeMaxThreatPotential(gomokuData, playingColor, true);
+		for (int i = 0; i < data[0].length; i++) {
+			for (int j = 0; j < data.length; j++) {
+				stoneDifference += data[j][i];
+			}
+		}
+		
+//		StoneData stoneData = new StoneData(0, data, evaluatedColor);
+//		stoneData.computeEvaluation(model);
+		
+		int playingColor = stoneDifference == 0 ? GomokuModel.BLACK : GomokuModel.WHITE;
+
+		EngineData engineData = new EngineData(data, playingColor);
+		engineData.computeEvaluation(model);
 	}
 
 	private int[] computeMaxThreatPotential(GomokuData gomokuData, int playingColor, boolean display) throws Exception {
@@ -140,9 +173,9 @@ public class GomokuEngine {
 				threatTable[columnIndex][rowIndex] = 0;
 			}
 		}
-
+		
 		for (CellGroup cellGroup : gomokuData.getCellGroups()) {
-			
+				
 			List<int[]> doubleThreat5List = cellGroup.getDoubleThreatMoves(4);
 			for (int[] doubleThreat5 : doubleThreat5List) {
 				Cell threatCell = gomokuData.get(doubleThreat5[0], doubleThreat5[1]);
@@ -201,38 +234,38 @@ public class GomokuEngine {
 				// SINGLE THREATS
 				
 				if (threatCell.getSingleThreat5Potential() > 0) {
-					threatTable[columnIndex][rowIndex] += 10000 * threatCell.getSingleThreat5Potential();
-				}
-				
-				if (threatCell.getSingleThreat5Potential() > 0) {
-					threatTable[columnIndex][rowIndex] += 10000 * threatCell.getSingleThreat5Potential();
+					threatTable[columnIndex][rowIndex] += 100000 * threatCell.getSingleThreat5Potential();
 				}
 				
 				if (threatCell.getSingleThreat4Potential() > 0) {
 					threatTable[columnIndex][rowIndex] += 4 * threatCell.getSingleThreat4Potential();
 					
 					if (threatCell.getSingleThreat4Potential() > 1 && threatCell.areSingle4ThreatsCompatible()) {
-						threatTable[columnIndex][rowIndex] += 10000 * threatCell.getSingleThreat4Potential();
+						threatTable[columnIndex][rowIndex] += 1000 * threatCell.getSingleThreat4Potential();
 					}
 					
 					if (threatCell.getDoubleThreat3Potential() > 0) {
-						threatTable[columnIndex][rowIndex] += 1000 * threatCell.getDoubleThreat3Potential();
+						threatTable[columnIndex][rowIndex] += 100 * threatCell.getDoubleThreat3Potential();
 					}
 					
 					if (threatCell.getDoubleThreat2Potential() > 0) {
-						threatTable[columnIndex][rowIndex] += 100 * threatCell.getDoubleThreat2Potential();
+						threatTable[columnIndex][rowIndex] += 10 * threatCell.getDoubleThreat2Potential();
 					}
 				}
 				
 				if (threatCell.getSingleThreat3Potential() > 0) {
-					threatTable[columnIndex][rowIndex] += 3 * threatCell.getSingleThreat3Potential();
+					threatTable[columnIndex][rowIndex] += 2 * threatCell.getSingleThreat3Potential();
 				}
 				
 				if (threatCell.getSingleThreat2Potential() > 0) {
-					threatTable[columnIndex][rowIndex] += 2 * threatCell.getSingleThreat2Potential();
+					threatTable[columnIndex][rowIndex] += 1 * threatCell.getSingleThreat2Potential();
 				}
 				
 				// DOUBLE THREATS
+				
+				if (threatCell.getDoubleThreat5Potential() > 0) {
+					threatTable[columnIndex][rowIndex] += 10000 * threatCell.getDoubleThreat5Potential();
+				}
 				
 				if (threatCell.getDoubleThreat4Potential() > 0) {
 					threatTable[columnIndex][rowIndex] += 1000 * threatCell.getDoubleThreat4Potential();
@@ -253,10 +286,6 @@ public class GomokuEngine {
 				
 				if (threatCell.getDoubleThreat2Potential() > 0) {
 					threatTable[columnIndex][rowIndex] += 1 * threatCell.getDoubleThreat2Potential();
-				}
-				
-				if (threatCell.getSingleThreat2Potential() > 0) {
-					threatTable[columnIndex][rowIndex] += 1 * threatCell.getSingleThreat2Potential();
 				}
 			}
 		}
@@ -280,6 +309,9 @@ public class GomokuEngine {
 		result[1] = bestThreat[1];
 		result[2] = maxPotential;
 		
+		if (display) {
+			model.firePropertyChange(GomokuModel.ENGINE_THREAT_EVALUATION_UPDATE, threatTable);
+		}
 		
 		return result;
 	}
@@ -855,9 +887,9 @@ public class GomokuEngine {
 		while (!threatMoves.isEmpty() && numberOfThreatsAnalysed < 2) {
 
 			if (depth == 0) {
-				maxDepthAllowed = Math.max(12 - threatMoves.size(), 2);
+				maxDepthAllowed = Math.max(11 - threatMoves.size(), 2);
 			}
-			int[] threatMove = findBestMoveAmongTheseMoves(data, playingColor, threatMoves, showAnalysis);
+			int[] threatMove = findBestMoveAmongTheseMoves(data, playingColor, threatMoves, showAnalysis, null);
 
 			numberOfThreatsAnalysed++;
 			
@@ -941,24 +973,6 @@ public class GomokuEngine {
 		return null;
 	}
 
-	private int[] findBestThreatMove(int[][] data, int playingColor, List<int[]> threatMoves) throws Exception {
-		
-		double maxEvaluation = 0;
-		
-		int[] bestMove = null;
-		
-		for (int[] threatMove : threatMoves) {
-			double evaluation = computeEvaluation(data, playingColor);
-			
-			if (evaluation > maxEvaluation) {
-				maxEvaluation = evaluation;
-				bestMove = threatMove;
-			}
-		}
-		
-		return null;
-	}
-
 	private int[] defendFromStrike(int[][] data, int playingColor) throws Exception {
 
 		List<int[]> opponentWinThreats = getAllThreat5MoveList(data, -playingColor);
@@ -976,7 +990,7 @@ public class GomokuEngine {
 			return defendFromStrikeMoves.get(0);
 		}
 		
-		return findBestMoveAmongTheseMoves(data, playingColor, defendFromStrikeMoves, false);
+		return findBestMoveAmongTheseMoves(data, playingColor, defendFromStrikeMoves, false, null);
 	}
 
 	private int[] defendFromSecondaryStrike(int[][] data, int playingColor) throws Exception {
@@ -987,7 +1001,7 @@ public class GomokuEngine {
 			return defendFromStrike;
 		}
 
-		return findBestMoveAmongTheseMoves(data, playingColor, findDefendingFromSecondaryStrikeMoves(data, playingColor), false);
+		return findBestMoveAmongTheseMoves(data, playingColor, findDefendingFromSecondaryStrikeMoves(data, playingColor), false, null);
 	}
 
 	private List<int[]> findDefendingFromStrikeMoves(int[][] data, int playingColor) throws Exception {
@@ -1298,18 +1312,16 @@ public class GomokuEngine {
 	 * @return
 	 * @throws Exception 
 	 */
-	private int[] findBestMoveAmongTheseMoves(int[][] data, int playingColor, List<int[]> analysedMoves, boolean showAnalysis) throws Exception {
+	private int[] findBestMoveAmongTheseMoves(int[][] data, int playingColor, List<int[]> analysedMoves, boolean showAnalysis, int[] bestOpponentMove) throws Exception {
 
 		double maxEvaluation = Double.NEGATIVE_INFINITY;
 
 		int[] bestMove = null;
 
-		int[] bestOpponentMove = null;
-
 		for (int[] analysedMove : analysedMoves) {
 			
 			if (Thread.interrupted()) {
-				throw new Exception();
+				throw new InterruptedException();
 			}
 
 			int[] opponentBestMove = new int[2];
@@ -1320,7 +1332,7 @@ public class GomokuEngine {
 			if (showAnalysis) {
 				model.firePropertyChange(GomokuModel.ANALYSED_MOVE, analysedMove);
 			}
-
+			
 			boolean defendFromStrikeFound = false;
 			
 //			int[] strike = findStrike(data, playingColor, new ArrayList<int[]>());
@@ -1360,7 +1372,7 @@ public class GomokuEngine {
 						if (data[j][i] == GomokuModel.UNPLAYED) {
 							data[j][i] = -playingColor;
 							
-							double evaluation = computeEvaluation(data, playingColor) - OPPONENT_EVALUATION_FACTOR * computeEvaluation(data, -playingColor);
+							double evaluation = playingColor * computeEvaluation(data);
 							if (evaluation < minEvaluation) {
 								minEvaluation = evaluation;
 								opponentBestMove[0] = j;
@@ -1384,14 +1396,16 @@ public class GomokuEngine {
 			if (showAnalysis) {
 				model.firePropertyChange(GomokuModel.ANALYSED_MOVE, opponentBestMove);
 			}
-			double evaluation = computeEvaluation(data, playingColor)
-					- OPPONENT_EVALUATION_FACTOR * computeEvaluation(data, -playingColor);
+			double evaluation = playingColor * computeEvaluation(data);
 			if (evaluation > maxEvaluation) {
 				maxEvaluation = evaluation;
 				bestMove = analysedMove;
-				bestOpponentMove = opponentBestMove;
+				if (bestOpponentMove != null) {
+					bestOpponentMove[0] = opponentBestMove[0];
+					bestOpponentMove[1] = opponentBestMove[1];
+				}
 			}
-
+			
 			data[opponentBestMove[0]][opponentBestMove[1]] = GomokuModel.UNPLAYED;
 			data[analysedMove[0]][analysedMove[1]] = GomokuModel.UNPLAYED;
 			if (showAnalysis) {
